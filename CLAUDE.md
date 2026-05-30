@@ -24,6 +24,10 @@ make prod                    # docker compose -f docker-compose.yml up --build -
 make logs                    # all services
 make logs-backend
 
+# Backend tests (Jest, no DB — dependencies are mocked)
+cd backend && npm test       # run the full suite
+cd backend && npm run test:watch
+
 # Interactive shells
 make shell-backend           # NestJS container
 make shell-mongo             # mongosh in MongoDB container
@@ -132,11 +136,13 @@ All routes are prefixed with `/api`. GET endpoints are public; write operations 
 
 ## CI/CD (GitHub Actions)
 
+Repo remoto: `https://github.com/Pulsar762002/santEligio.git` (`origin`, branch `main`).
+
 Pipeline in `.github/workflows/ci-cd.yml`:
 
 | Job | Trigger | Cosa fa |
 |---|---|---|
-| `backend` | ogni push / PR su `main` | `npm ci` → `npm run build` → `npm test` |
+| `backend` | ogni push / PR su `main` | `npm ci` → `npm run build` → `npm test` (39 smoke test) |
 | `frontend` | ogni push / PR su `main` | `npm ci` → `ng build --configuration production` |
 | `deploy` | push su `main` (dopo CI verde) | SSH nel server → `git pull` → `docker compose up --build -d` |
 
@@ -181,3 +187,11 @@ Il server deve avere già `.env` e `nginx/ssl/` configurati — il deploy fa sol
 - Production image runs as non-root user `appuser`
 - `npm run build` → `dist/`, production entry: `node dist/main`
 - Dev: `npm run start:dev` (NestJS watch mode)
+- First admin user: `npm run seed` (reads `ADMIN_EMAIL` / `ADMIN_PASSWORD`, idempotent — see First-time setup)
+
+### Testing
+
+- Jest (`*.spec.ts` next to the file under test); run with `npm test`. Requires `@types/jest` (in devDependencies).
+- Unit/smoke tests only — Mongoose models and other deps are mocked (`getModelToken`, `useValue`), so **no MongoDB is needed** and the suite runs in seconds. The CI `backend` job runs it on every push/PR.
+- Covered: `auth`, `news`, `eventi`, `orari-messe` (services + controllers). `uploads` is left uncovered (pure Multer config).
+- Pattern: build the testing module with `Test.createTestingModule`, inject mocked collaborators, assert the query filter/sort passed to the model and that `NotFoundException` is thrown on missing ids.
