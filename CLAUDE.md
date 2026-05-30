@@ -43,6 +43,20 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
   -keyout nginx/ssl/privkey.pem -out nginx/ssl/fullchain.pem -subj "/CN=localhost"
 ```
 
+### Create the first admin user
+
+The DB has no admin out of the box. After the backend image is built, seed one (idempotent):
+
+```bash
+# set ADMIN_EMAIL / ADMIN_PASSWORD in .env first
+make shell-backend
+npm run seed            # runs node dist/seed → creates the admin in the `utenti` collection
+```
+
+Mongoose collection names are pinned explicitly via `@Schema({ collection: ... })`
+(`utenti`, `eventi`, `orari_messe`, `news`) so they match the validators and indexes
+declared in `mongo-init/01-init.js`. Do not rely on Mongoose's default pluralization.
+
 ## Local dev URLs
 
 | Service        | URL                       |
