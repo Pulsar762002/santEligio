@@ -1,5 +1,3 @@
-version: '3.9'
-
 # Questo file viene letto automaticamente da Docker Compose in locale.
 # In produzione usare: docker compose -f docker-compose.yml up
 
@@ -29,6 +27,13 @@ services:
 
   nginx:
     volumes:
+      # In dev sostituiamo il mount certbot (read-only, da docker-compose.yml) con un
+      # volume vuoto e scrivibile: stesso target /etc/letsencrypt → l'override vince.
+      # Così il bind del cert self-signed può essere montato nella sottocartella live/.
+      - dev_letsencrypt:/etc/letsencrypt
       - ./nginx/ssl:/etc/letsencrypt/live/santeligio.it:ro   # self-signed in dev
     ports:
       - '8088:80'     # evita conflitti con porte sistema in dev
+
+volumes:
+  dev_letsencrypt:
