@@ -1,0 +1,30 @@
+# Secrets — MAI su git
+.env
+*.pem
+*.key
+nginx/ssl/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Build artifacts
+frontend/dist/
+backend/dist/
+frontend/.angular/
+*.tsbuildinfo
+
+# Docker volumes locali
+.docker-volumes/
+
+# Dati certbot (certificati e challenge)
+data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
