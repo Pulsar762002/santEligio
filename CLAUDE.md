@@ -115,6 +115,7 @@ All routes are prefixed with `/api`. GET endpoints are public; write operations 
 | `orari-messe` | `GET /api/orari-messe[?tipo=feriale\|festiva\|prefestiva]`, `GET /api/orari-messe/:id`, `POST/PATCH/DELETE` (JWT) |
 | `media` | `POST /api/media` (JWT, multipart `file` field) → record Media `{ url, ... }`, `GET /api/media` (JWT), `DELETE /api/media/:id` (JWT) — libreria file; ogni upload è tracciato nella collection `media` e cancellabile (rimuove anche il file dal disco) |
 | `stradario` | `GET /api/stradario` (pubblico) — vie del territorio per contrada (collection `stradario`, seed-managed); reso da `/p/stradario` |
+| `galleria` | `GET /api/galleria/categorie`, `GET /api/galleria[?categoria=]` (pubblici); `POST/PATCH/DELETE /api/galleria/categorie[/:id]` e `POST/PATCH/DELETE /api/galleria[/:id]` (JWT) — categorie + item foto/video (collections `galleria_categorie`, `galleria`); eliminando una categoria si cancellano i suoi item. Reso da `/galleria` |
 | `pagine` | `GET /api/pagine[?sezione=&tutte=true]`, `GET /api/pagine/:slug`, `POST/PATCH/DELETE` (JWT) — contenuti statici |
 | `gruppi` | `GET /api/gruppi[?area=liturgia\|catechesi\|carita&tutti=true]`, `GET /api/gruppi/:id`, `POST/PATCH/DELETE` (JWT) |
 | `intenzioni-preghiera` | `POST /api/intenzioni-preghiera` (**pubblico**), `GET`, `PATCH /:id` (segna `letta`), `DELETE /:id` (JWT) |
@@ -189,6 +190,7 @@ Il server deve avere già `.env` e `nginx/ssl/` configurati — il deploy fa sol
 | `/orari-messe` | `OrariMesseComponent` — grouped by tipo (festiva / prefestiva / feriale) |
 | `/parrocchia` | `ParrocchiaComponent` — hub: pagine statiche raggruppate per sezione |
 | `/gruppi` | `GruppiComponent` — gruppi e movimenti raggruppati per area |
+| `/galleria` | `GalleriaComponent` — foto/video per categoria; popup con sfondo sfocato (video YouTube/Vimeo via iframe o file via `<video>`) |
 | `/intenzioni-preghiera` | `IntenzioniPreghieraComponent` — form pubblico di invio intenzione |
 | `/p/stradario` | `StradarioComponent` — vie del territorio raggruppate per contrada (rotta dedicata, prima della generica) |
 | `/p/:slug` | `PaginaComponent` — render generico di una pagina statica (HTML via `[innerHTML]`) |

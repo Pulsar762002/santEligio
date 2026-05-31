@@ -37,6 +37,7 @@ import { SezionePagina, SEZIONE_LABELS } from '../../core/models/pagina.model';
           <li><a routerLink="/eventi" routerLinkActive="active">Eventi</a></li>
           <li><a routerLink="/orari-messe" routerLinkActive="active">Orari Messe</a></li>
           <li><a routerLink="/gruppi" routerLinkActive="active">Gruppi</a></li>
+          <li><a routerLink="/galleria" routerLinkActive="active">Galleria</a></li>
           <li><a routerLink="/intenzioni-preghiera" routerLinkActive="active">Intenzioni</a></li>
           <li><a routerLink="/p/contatti" routerLinkActive="active">Contatti</a></li>
           @if (auth.isAdmin()) {

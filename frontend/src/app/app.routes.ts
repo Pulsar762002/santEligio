@@ -35,6 +35,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/gruppi/gruppi.component').then(m => m.GruppiComponent),
   },
   {
+    path: 'galleria',
+    loadComponent: () => import('./pages/galleria/galleria.component').then(m => m.GalleriaComponent),
+  },
+  {
     path: 'intenzioni-preghiera',
     loadComponent: () => import('./pages/intenzioni/intenzioni-preghiera.component').then(m => m.IntenzioniPreghieraComponent),
   },
@@ -84,6 +88,11 @@ export const routes: Routes = [
     path: 'admin/pagine',
     canActivate: [adminGuard],
     loadComponent: () => import('./pages/admin/pagine/admin-pagine.component').then(m => m.AdminPagineComponent),
+  },
+  {
+    path: 'admin/galleria',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./pages/admin/galleria/admin-galleria.component').then(m => m.AdminGalleriaComponent),
   },
   { path: '**', redirectTo: '' },
 ];

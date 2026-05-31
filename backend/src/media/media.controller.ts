@@ -9,7 +9,10 @@ import { extname, join } from 'path';
 import { MediaService } from './media.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
-const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
+const ALLOWED_MIME = new Set([
+  'image/jpeg', 'image/png', 'image/webp', 'application/pdf',
+  'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime',
+]);
 
 @UseGuards(JwtAuthGuard)
 @Controller('media')

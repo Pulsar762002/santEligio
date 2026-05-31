@@ -108,5 +108,6 @@ export class AdminDashboardComponent {
     { label: 'Media', description: 'Carica immagini e documenti PDF.', icon: 'F', route: '/admin/media', available: true },
     { label: 'Stradario', description: 'Gestisci le vie del territorio per contrada.', icon: 'S', route: '/admin/stradario', available: true },
     { label: 'Pagine', description: 'Crea e modifica le pagine di contenuto del sito.', icon: 'P', route: '/admin/pagine', available: true },
+    { label: 'Galleria', description: 'Categorie, foto e video della galleria.', icon: 'G', route: '/admin/galleria', available: true },
   ];
 }
