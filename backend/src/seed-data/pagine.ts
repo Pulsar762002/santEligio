@@ -5,6 +5,8 @@
 import { SezionePagina } from '../pagine/schemas/pagina.schema';
 import { PARROCO_CATECHISMO } from './parroco-catechismo';
 import { PARROCO_CODICE_CANONICO } from './parroco-codice-canonico';
+import { DIACONO_CODICE_CANONICO } from './diacono-codice-canonico';
+import { DIACONO_CATECHISMO } from './diacono-catechismo';
 
 export interface SeedPagina {
   slug: string;
@@ -92,11 +94,33 @@ export const PAGINE_SEED: SeedPagina[] = [
     contenuto: `<p><em>Contenuto in preparazione.</em></p>`,
   },
   {
-    slug: 'biografia-diacono',
-    titolo: 'Reverendo Maurizio Fabrizi',
-    sottotitolo: 'Biografia del Diacono',
+    slug: 'diacono',
+    titolo: 'Il Diacono',
+    sottotitolo: 'Reverendo Maurizio Fabrizi',
     sezione: SezionePagina.DIACONO,
     ordine: 1,
+    contenuto: `<p>Diacono permanente della Parrocchia di Sant'Eligio, ordinato il 20 novembre 1993. Offre il suo servizio nella liturgia, nella guida dell'Adorazione Eucaristica serale, nella predicazione e nei corsi di preparazione al matrimonio e di pastorale sanitaria.</p>`,
+  },
+  {
+    slug: 'diacono-codice-canonico',
+    titolo: 'Il Diacono nel Codice di Diritto Canonico',
+    sezione: SezionePagina.DIACONO,
+    ordine: 2,
+    contenuto: DIACONO_CODICE_CANONICO,
+  },
+  {
+    slug: 'diacono-catechismo',
+    titolo: 'Il Diacono nel Catechismo della Chiesa Cattolica',
+    sezione: SezionePagina.DIACONO,
+    ordine: 3,
+    contenuto: DIACONO_CATECHISMO,
+  },
+  {
+    slug: 'biografia-diacono',
+    titolo: 'Biografia',
+    sottotitolo: 'Reverendo Maurizio Fabrizi',
+    sezione: SezionePagina.DIACONO,
+    ordine: 4,
     contenuto: `
 <p>Nato a Roma il 12 febbraio 1952 da famiglia contadina, cattolica praticante, di tipo patriarcale. Diplomato come perito elettrotecnico, dopo il servizio militare, si trasferisce a Torino per lavorare come macchinista presso le Ferrovie dello Stato, dove conosce Filomena. Si sposano a Napoli il 22 aprile 1976; il 28 aprile 1977 nasceva il primo figlio, Andrea; l'8 dicembre 1979 nasceva Alessio e nel 1991 nasceva Chiara.</p>
 <p>Nel febbraio 1983 è tornato a vivere a Roma con la famiglia, al Villaggio Prenestino, a pochi passi dalla parrocchia di Sant'Eligio, dove si sono subito inseriti come catechisti ed animatori di oratorio. Qualche tempo dopo, l'allora parroco Monsignor Rino Cunial gli propose il Diaconato permanente e, sotto la guida di Sua Eccellenza Monsignor Luca Brandolini, iniziò il percorso di formazione per il Diaconato, studiando teologia presso gli Istituti Ecclesia Mater e, per la specializzazione in Pastorale Sanitaria, presso il Camillianum.</p>
