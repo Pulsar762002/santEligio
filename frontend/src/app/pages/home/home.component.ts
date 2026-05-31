@@ -23,9 +23,21 @@ import { EventCardComponent } from '../../shared/event-card/event-card.component
     </section>
 
     <div class="container page-content">
-      <section class="section">
-        <h2>Ultime Notizie</h2>
-        @if (news().length > 0) {
+      @if (eventi().length > 0) {
+        <section class="section">
+          <h2>Prossimi Eventi</h2>
+          <div class="event-list">
+            @for (evento of eventi(); track evento._id) {
+              <app-event-card [evento]="evento" [showDescription]="false" />
+            }
+          </div>
+          <a routerLink="/eventi" class="link-more">Tutti gli eventi &rarr;</a>
+        </section>
+      }
+
+      @if (news().length > 0) {
+        <section class="section">
+          <h2>Ultime Notizie</h2>
           <div class="card-grid">
             @for (item of news().slice(0, 3); track item._id) {
               <article class="card">
@@ -41,24 +53,8 @@ import { EventCardComponent } from '../../shared/event-card/event-card.component
             }
           </div>
           <a routerLink="/notizie" class="link-more">Tutte le notizie &rarr;</a>
-        } @else {
-          <p class="empty">Nessuna notizia disponibile.</p>
-        }
-      </section>
-
-      <section class="section">
-        <h2>Prossimi Eventi</h2>
-        @if (eventi().length > 0) {
-          <div class="event-list">
-            @for (evento of eventi(); track evento._id) {
-              <app-event-card [evento]="evento" [showDescription]="false" />
-            }
-          </div>
-          <a routerLink="/eventi" class="link-more">Tutti gli eventi &rarr;</a>
-        } @else {
-          <p class="empty">Nessun evento in programma.</p>
-        }
-      </section>
+        </section>
+      }
     </div>
   `,
   styles: [`
