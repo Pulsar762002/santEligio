@@ -6,6 +6,7 @@ import { NewsService } from '../../../core/services/news.service';
 import { UploadsService } from '../../../core/services/uploads.service';
 import { News, CategoriaNews } from '../../../core/models/news.model';
 import { assetUrl } from '../../../core/utils/asset-url';
+import { DataTableComponent, ColumnDef } from '../../../shared/data-table/data-table.component';
 
 interface NewsForm {
   titolo: string;
@@ -24,7 +25,7 @@ const CATEGORIE: CategoriaNews[] = ['liturgia', 'catechismo', 'caritas', 'eventi
 @Component({
   selector: 'app-admin-news',
   standalone: true,
-  imports: [RouterLink, DatePipe, TitleCasePipe, FormsModule],
+  imports: [RouterLink, TitleCasePipe, FormsModule, DataTableComponent],
   template: `
     <div class="container page-content">
       <div class="head">
@@ -94,40 +95,17 @@ const CATEGORIE: CategoriaNews[] = ['liturgia', 'catechismo', 'caritas', 'eventi
           </div>
         </form>
       } @else {
-        @if (news().length > 0) {
-          <table class="grid">
-            <thead>
-              <tr><th></th><th>Titolo</th><th>Categoria</th><th>Data</th><th>Stato</th><th></th></tr>
-            </thead>
-            <tbody>
-              @for (n of news(); track n._id) {
-                <tr>
-                  <td class="thumb-cell">
-                    @if (n.immagine) {
-                      <img class="thumb" [src]="src(n.immagine)" [alt]="n.titolo" />
-                    } @else {
-                      <span class="thumb placeholder">—</span>
-                    }
-                  </td>
-                  <td>{{ n.titolo }}</td>
-                  <td>{{ n.categoria ? (n.categoria | titlecase) : '—' }}</td>
-                  <td>{{ n.createdAt | date:'d MMM yyyy':'':'it' }}</td>
-                  <td>
-                    <span class="badge" [class.pub]="n.pubblicato">
-                      {{ n.pubblicato ? 'Pubblicato' : 'Bozza' }}
-                    </span>
-                  </td>
-                  <td class="actions">
-                    <button class="link" (click)="modifica(n)">Modifica</button>
-                    <button class="link danger" (click)="elimina(n)">Elimina</button>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        } @else {
-          <p class="empty">Nessuna notizia. Creane una con “+ Nuova notizia”.</p>
-        }
+        <app-data-table
+          [columns]="columns"
+          [rows]="news()"
+          [actions]="azioni"
+          [initialSort]="{ key: 'createdAt', dir: 'desc' }"
+          searchPlaceholder="Cerca notizie…"
+        />
+        <ng-template #azioni let-n>
+          <button class="link" (click)="modifica(n)">Modifica</button>
+          <button class="link danger" (click)="elimina(n)">Elimina</button>
+        </ng-template>
       }
     </div>
   `,
@@ -144,16 +122,6 @@ const CATEGORIE: CategoriaNews[] = ['liturgia', 'catechismo', 'caritas', 'eventi
     .hint { display: block; font-size: .8rem; color: var(--color-text-muted); margin-top: .35rem; }
     .img-preview { display: flex; align-items: flex-start; gap: .75rem; margin-bottom: .6rem; }
     .img-preview img { max-width: 220px; max-height: 140px; border-radius: var(--radius); border: 1px solid var(--color-border); object-fit: cover; }
-    .grid { width: 100%; border-collapse: collapse; background: white; border: 1px solid var(--color-border); border-radius: var(--radius); overflow: hidden; }
-    .grid th, .grid td { text-align: left; padding: .75rem 1rem; border-bottom: 1px solid var(--color-border); font-size: .9rem; }
-    .grid th { background: var(--color-bg-alt); font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: var(--color-text-muted); }
-    .grid tr:last-child td { border-bottom: none; }
-    .thumb-cell { width: 64px; }
-    .thumb { display: block; width: 48px; height: 48px; border-radius: 6px; object-fit: cover; border: 1px solid var(--color-border); }
-    .thumb.placeholder { display: flex; align-items: center; justify-content: center; color: var(--color-text-muted); background: var(--color-bg-alt); }
-    .badge { font-size: .75rem; padding: .15rem .5rem; border-radius: 999px; background: var(--color-bg-alt); color: var(--color-text-muted); border: 1px solid var(--color-border); }
-    .badge.pub { background: color-mix(in srgb, var(--color-primary) 12%, white); color: var(--color-primary-dark); border-color: color-mix(in srgb, var(--color-primary) 35%, white); }
-    .actions { white-space: nowrap; }
     .link { background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 0 .4rem; font-size: .85rem; }
     .link:hover { text-decoration: underline; }
     .link.danger { color: #b91c1c; }
@@ -174,6 +142,21 @@ export class AdminNewsComponent {
   form: NewsForm = emptyForm();
 
   src = assetUrl;
+  private dp = new DatePipe('it');
+  private tc = new TitleCasePipe();
+
+  readonly columns: ColumnDef<News>[] = [
+    { key: 'immagine', label: '', type: 'image', sortable: false, filterable: false, width: '64px',
+      imageUrl: n => (n.immagine ? this.src(n.immagine) : '') },
+    { key: 'titolo', label: 'Titolo', value: n => n.titolo },
+    { key: 'categoria', label: 'Categoria', value: n => n.categoria ?? '',
+      display: n => (n.categoria ? this.tc.transform(n.categoria) : '—') },
+    { key: 'createdAt', label: 'Data', type: 'date',
+      value: n => (n.createdAt ? new Date(n.createdAt).getTime() : 0),
+      display: n => this.dp.transform(n.createdAt, 'd MMM yyyy') ?? '' },
+    { key: 'pubblicato', label: 'Stato', type: 'badge', value: n => n.pubblicato,
+      badgeLabel: n => (n.pubblicato ? 'Pubblicato' : 'Bozza'), badgeOn: n => n.pubblicato },
+  ];
 
   constructor() {
     this.ricarica();

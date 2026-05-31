@@ -6,6 +6,7 @@ import { EventiService } from '../../../core/services/eventi.service';
 import { UploadsService } from '../../../core/services/uploads.service';
 import { Evento } from '../../../core/models/evento.model';
 import { assetUrl } from '../../../core/utils/asset-url';
+import { DataTableComponent, ColumnDef } from '../../../shared/data-table/data-table.component';
 
 interface EventoForm {
   titolo: string;
@@ -38,7 +39,7 @@ function localInputToIso(value: string): string {
 @Component({
   selector: 'app-admin-eventi',
   standalone: true,
-  imports: [RouterLink, DatePipe, FormsModule],
+  imports: [RouterLink, FormsModule, DataTableComponent],
   template: `
     <div class="container page-content">
       <div class="head">
@@ -114,40 +115,17 @@ function localInputToIso(value: string): string {
           </div>
         </form>
       } @else {
-        @if (eventi().length > 0) {
-          <table class="grid">
-            <thead>
-              <tr><th></th><th>Titolo</th><th>Inizio</th><th>Luogo</th><th>Stato</th><th></th></tr>
-            </thead>
-            <tbody>
-              @for (e of eventi(); track e._id) {
-                <tr>
-                  <td class="thumb-cell">
-                    @if (e.immagine) {
-                      <img class="thumb" [src]="src(e.immagine)" [alt]="e.titolo" />
-                    } @else {
-                      <span class="thumb placeholder">—</span>
-                    }
-                  </td>
-                  <td>{{ e.titolo }}</td>
-                  <td>{{ e.dataInizio | date:'d MMM yyyy, HH:mm':'':'it' }}</td>
-                  <td>{{ e.luogo || '—' }}</td>
-                  <td>
-                    <span class="badge" [class.pub]="e.pubblicato">
-                      {{ e.pubblicato ? 'Pubblicato' : 'Bozza' }}
-                    </span>
-                  </td>
-                  <td class="actions">
-                    <button class="link" (click)="modifica(e)">Modifica</button>
-                    <button class="link danger" (click)="elimina(e)">Elimina</button>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        } @else {
-          <p class="empty">Nessun evento. Creane uno con “+ Nuovo evento”.</p>
-        }
+        <app-data-table
+          [columns]="columns"
+          [rows]="eventi()"
+          [actions]="azioni"
+          [initialSort]="{ key: 'dataInizio', dir: 'desc' }"
+          searchPlaceholder="Cerca eventi…"
+        />
+        <ng-template #azioni let-e>
+          <button class="link" (click)="modifica(e)">Modifica</button>
+          <button class="link danger" (click)="elimina(e)">Elimina</button>
+        </ng-template>
       }
     </div>
   `,
@@ -166,16 +144,6 @@ function localInputToIso(value: string): string {
     .hint { display: block; font-size: .8rem; color: var(--color-text-muted); margin-top: .35rem; }
     .img-preview { display: flex; align-items: flex-start; gap: .75rem; margin-bottom: .6rem; }
     .img-preview img { max-width: 220px; max-height: 140px; border-radius: var(--radius); border: 1px solid var(--color-border); object-fit: cover; }
-    .thumb-cell { width: 64px; }
-    .thumb { display: block; width: 48px; height: 48px; border-radius: 6px; object-fit: cover; border: 1px solid var(--color-border); }
-    .thumb.placeholder { display: flex; align-items: center; justify-content: center; color: var(--color-text-muted); background: var(--color-bg-alt); }
-    .grid { width: 100%; border-collapse: collapse; background: white; border: 1px solid var(--color-border); border-radius: var(--radius); overflow: hidden; }
-    .grid th, .grid td { text-align: left; padding: .75rem 1rem; border-bottom: 1px solid var(--color-border); font-size: .9rem; }
-    .grid th { background: var(--color-bg-alt); font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: var(--color-text-muted); }
-    .grid tr:last-child td { border-bottom: none; }
-    .badge { font-size: .75rem; padding: .15rem .5rem; border-radius: 999px; background: var(--color-bg-alt); color: var(--color-text-muted); border: 1px solid var(--color-border); }
-    .badge.pub { background: color-mix(in srgb, var(--color-primary) 12%, white); color: var(--color-primary-dark); border-color: color-mix(in srgb, var(--color-primary) 35%, white); }
-    .actions { white-space: nowrap; }
     .link { background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 0 .4rem; font-size: .85rem; }
     .link:hover { text-decoration: underline; }
     .link.danger { color: #b91c1c; }
@@ -195,6 +163,19 @@ export class AdminEventiComponent {
   form: EventoForm = emptyForm();
 
   src = assetUrl;
+  private dp = new DatePipe('it');
+
+  readonly columns: ColumnDef<Evento>[] = [
+    { key: 'immagine', label: '', type: 'image', sortable: false, filterable: false, width: '64px',
+      imageUrl: e => (e.immagine ? this.src(e.immagine) : '') },
+    { key: 'titolo', label: 'Titolo', value: e => e.titolo },
+    { key: 'dataInizio', label: 'Inizio', type: 'date',
+      value: e => (e.dataInizio ? new Date(e.dataInizio).getTime() : 0),
+      display: e => this.dp.transform(e.dataInizio, 'd MMM yyyy, HH:mm') ?? '' },
+    { key: 'luogo', label: 'Luogo', value: e => e.luogo ?? '', display: e => e.luogo || '—' },
+    { key: 'pubblicato', label: 'Stato', type: 'badge', value: e => e.pubblicato,
+      badgeLabel: e => (e.pubblicato ? 'Pubblicato' : 'Bozza'), badgeOn: e => e.pubblicato },
+  ];
 
   constructor() {
     this.ricarica();

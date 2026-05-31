@@ -11,8 +11,9 @@ export class OrariMesseService {
     @InjectModel(OrarioMessa.name) private orarioModel: Model<OrarioMessaDocument>,
   ) {}
 
-  findAll(tipo?: TipoMessa) {
-    const filter: any = { attivo: true };
+  findAll(tipo?: TipoMessa, soloAttivi = true) {
+    const filter: any = {};
+    if (soloAttivi) filter.attivo = true;
     if (tipo) filter.tipo = tipo;
     return this.orarioModel.find(filter).sort({ ordine: 1, ora: 1 });
   }

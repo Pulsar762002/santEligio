@@ -13,8 +13,11 @@ export class OrariMesseController {
   constructor(private readonly orariMesseService: OrariMesseService) {}
 
   @Get()
-  findAll(@Query('tipo') tipo?: TipoMessa) {
-    return this.orariMesseService.findAll(tipo);
+  findAll(
+    @Query('tipo') tipo?: TipoMessa,
+    @Query('tutti') tutti?: string,
+  ) {
+    return this.orariMesseService.findAll(tipo, tutti !== 'true');
   }
 
   @Get(':id')

@@ -8,9 +8,10 @@ export class OrariMesseService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/orari-messe`;
 
-  getAll(tipo?: TipoMessa) {
+  getAll(tipo?: TipoMessa, tutti = false) {
     const params: Record<string, string> = {};
     if (tipo) params['tipo'] = tipo;
+    if (tutti) params['tutti'] = 'true';
     return this.http.get<OrarioMessa[]>(this.base, { params });
   }
 
