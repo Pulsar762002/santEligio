@@ -4,11 +4,12 @@ import { DatePipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NewsService } from '../../core/services/news.service';
 import { EventiService } from '../../core/services/eventi.service';
+import { EventCardComponent } from '../../shared/event-card/event-card.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, EventCardComponent],
   template: `
     <section class="hero">
       <div class="container">
@@ -48,19 +49,11 @@ import { EventiService } from '../../core/services/eventi.service';
       <section class="section">
         <h2>Prossimi Eventi</h2>
         @if (eventi().length > 0) {
-          <ul class="event-list">
+          <div class="event-list">
             @for (evento of eventi(); track evento._id) {
-              <li class="event-item">
-                <span class="event-date">{{ evento.dataInizio | date:'d MMM':'':'it' }}</span>
-                <div class="event-info">
-                  <strong>{{ evento.titolo }}</strong>
-                  @if (evento.luogo) {
-                    <span class="event-luogo">{{ evento.luogo }}</span>
-                  }
-                </div>
-              </li>
+              <app-event-card [evento]="evento" [showDescription]="false" />
             }
-          </ul>
+          </div>
           <a routerLink="/eventi" class="link-more">Tutti gli eventi &rarr;</a>
         } @else {
           <p class="empty">Nessun evento in programma.</p>
@@ -70,38 +63,33 @@ import { EventiService } from '../../core/services/eventi.service';
   `,
   styles: [`
     .hero {
-      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+      position: relative;
+      background:
+        linear-gradient(135deg,
+          color-mix(in srgb, var(--color-primary) 82%, transparent) 0%,
+          color-mix(in srgb, var(--color-primary-dark) 88%, transparent) 100%),
+        url('/assets/SantEligioFronte.webp') center / cover no-repeat;
       color: white;
-      padding: 4rem 0 3rem;
+      padding: 6rem 0 5rem;
       text-align: center;
     }
-    .hero h1 { color: white; font-size: 2.4rem; margin-bottom: .5rem; }
-    .tagline { font-size: 1.15rem; opacity: .85; margin-bottom: 2rem; }
+    .hero .container { position: relative; z-index: 1; }
+    .hero h1 {
+      color: white;
+      font-size: 2.6rem;
+      margin-bottom: .5rem;
+      text-shadow: 0 2px 8px rgba(0,0,0,.35);
+    }
+    .tagline {
+      font-size: 1.15rem;
+      opacity: .95;
+      margin-bottom: 2rem;
+      text-shadow: 0 1px 6px rgba(0,0,0,.3);
+    }
     .hero-links { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
     .hero .btn-outline { border-color: rgba(255,255,255,.7); color: white; &:hover { background: rgba(255,255,255,.1); } }
     .card-img { width: 100%; height: 160px; object-fit: cover; border-radius: 4px; margin-bottom: .75rem; }
-    .event-list { list-style: none; padding: 0; margin: 1rem 0; }
-    .event-item {
-      display: flex;
-      align-items: center;
-      gap: 1.25rem;
-      padding: .85rem 0;
-      border-bottom: 1px solid var(--color-border);
-      &:last-child { border-bottom: none; }
-    }
-    .event-date {
-      min-width: 52px;
-      text-align: center;
-      background: var(--color-bg-alt);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      padding: .3rem .5rem;
-      font-size: .85rem;
-      font-weight: 700;
-      color: var(--color-primary);
-    }
-    .event-info { display: flex; flex-direction: column; gap: .15rem; }
-    .event-luogo { font-size: .85rem; color: var(--color-text-muted); }
+    .event-list { display: grid; gap: 1rem; margin: 1rem 0; }
   `],
 })
 export class HomeComponent {

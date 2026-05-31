@@ -8,8 +8,9 @@ export class EventiService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/eventi`;
 
-  getAll() {
-    return this.http.get<Evento[]>(this.base);
+  getAll(tutti = false) {
+    const params = tutti ? { params: { tutti: 'true' } } : {};
+    return this.http.get<Evento[]>(this.base, params);
   }
 
   getProssimi(limit = 3) {

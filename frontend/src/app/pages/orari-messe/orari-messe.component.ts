@@ -70,6 +70,7 @@ import { TipoMessa } from '../../core/models/orario-messa.model';
     .note { color: var(--color-text-muted); font-size: .85rem; }
   `],
 })
+
 export class OrariMesseComponent {
   private orariService = inject(OrariMesseService);
 

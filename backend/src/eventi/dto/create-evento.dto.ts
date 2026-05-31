@@ -21,6 +21,10 @@ export class CreateEventoDto {
   luogo?: string;
 
   @IsOptional()
+  @IsString()
+  immagine?: string;
+
+  @IsOptional()
   @IsBoolean()
   pubblicato?: boolean;
 }

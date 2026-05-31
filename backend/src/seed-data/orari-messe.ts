@@ -12,11 +12,11 @@ export interface SeedOrarioMessa {
 }
 
 export const ORARI_MESSE_SEED: SeedOrarioMessa[] = [
-  { giorno: 'Lunedì', ora: '18:30', tipo: TipoMessa.FERIALE, ordine: 1 },
-  { giorno: 'Martedì', ora: '18:30', tipo: TipoMessa.FERIALE, ordine: 2 },
-  { giorno: 'Mercoledì', ora: '18:30', tipo: TipoMessa.FERIALE, ordine: 3 },
+  { giorno: 'Lunedì', ora: '8:30, 18:30', tipo: TipoMessa.FERIALE, ordine: 1 },
+  { giorno: 'Martedì', ora: '8:30, 18:30', tipo: TipoMessa.FERIALE, ordine: 2 },
+  { giorno: 'Mercoledì', ora: '8:30, 18:30', tipo: TipoMessa.FERIALE, ordine: 3 },
   { giorno: 'Giovedì', ora: '08:30', tipo: TipoMessa.FERIALE, ordine: 4 },
-  { giorno: 'Venerdì', ora: '18:30', tipo: TipoMessa.FERIALE, ordine: 5 },
+  { giorno: 'Venerdì', ora: '8:30, 18:30', tipo: TipoMessa.FERIALE, ordine: 5 },
   { giorno: 'Sabato e prefestivi', ora: '18:30', tipo: TipoMessa.PREFESTIVA, ordine: 6 },
   { giorno: 'Domenica e festivi', ora: '08:30', tipo: TipoMessa.FESTIVA, ordine: 7 },
   { giorno: 'Domenica e festivi', ora: '11:00', tipo: TipoMessa.FESTIVA, ordine: 8 },

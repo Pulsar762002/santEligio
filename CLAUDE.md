@@ -122,7 +122,7 @@ All routes are prefixed with `/api`. GET endpoints are public; write operations 
 
 `SezionePagina` enum: `parrocchia \| parroco \| diacono \| caritas \| consultorio \| organismi \| sacramenti \| gruppi \| altro`. `AreaGruppo` enum: `liturgia \| catechesi \| carita`.
 
-I contenuti del vecchio sito (`old/`) sono estratti in `src/seed-data/` (`pagine.ts`, `gruppi.ts`, `orari-messe.ts`) e caricati con `npm run seed:contenuti` (idempotente, upsert su slug/nome/giorno+ora). Vedi `old/ANALISI.md`.
+I contenuti del vecchio sito (`old/`) sono estratti in `src/seed-data/` (`pagine.ts`, `gruppi.ts`, `orari-messe.ts`) e caricati con `npm run seed:contenuti` (idempotente, upsert su slug/nome/ordine). Vedi `old/ANALISI.md`.
 
 ### Key env vars
 

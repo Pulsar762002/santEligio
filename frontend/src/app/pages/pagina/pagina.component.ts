@@ -60,11 +60,27 @@ type Stato =
       margin: 0;
     }
     .pagina-img {
-      width: 100%;
+      display: block;
+      float: left;
+      max-width: 300px;
+      width: 45%;
+      height: auto;
+      margin: .25rem 1.75rem 1rem 0;
       border-radius: var(--radius);
-      margin-bottom: 1.75rem;
+      border: 4px solid white;
+      box-shadow: 0 8px 24px rgba(0,0,0,.15);
+    }
+    @media (max-width: 540px) {
+      .pagina-img {
+        float: none;
+        width: 100%;
+        max-width: 320px;
+        margin: 0 auto 1.5rem;
+      }
     }
     .prosa { font-size: 1.02rem; }
+    /* il contenuto che segue il float torna a tutta larghezza */
+    .prosa::after { content: ''; display: block; clear: both; }
     .prosa ::ng-deep h3 {
       margin-top: 1.75rem;
       font-size: 1.2rem;

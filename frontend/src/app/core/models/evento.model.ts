@@ -5,6 +5,7 @@ export interface Evento {
   dataInizio: string;
   dataFine?: string;
   luogo?: string;
+  immagine?: string;
   pubblicato: boolean;
   createdAt: string;
 }

@@ -20,6 +20,9 @@ export class Evento {
   @Prop()
   luogo: string;
 
+  @Prop()
+  immagine: string;
+
   @Prop({ default: false })
   pubblicato: boolean;
 }

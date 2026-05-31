@@ -1,6 +1,6 @@
 // Carica i contenuti estratti dal vecchio sito (pagine, gruppi, orari messe).
 // Uso:  npm run seed:contenuti
-// Idempotente: usa upsert sulle chiavi naturali (slug / nome / giorno+ora),
+// Idempotente: usa upsert sulle chiavi naturali (slug / nome / ordine),
 // quindi può essere rieseguito senza creare duplicati.
 
 import { NestFactory } from '@nestjs/core';
@@ -36,7 +36,7 @@ async function seed() {
 
     for (const o of ORARI_MESSE_SEED) {
       await orari.updateOne(
-        { giorno: o.giorno, ora: o.ora },
+        { ordine: o.ordine },
         { $set: o },
         { upsert: true },
       );

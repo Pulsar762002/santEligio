@@ -11,6 +11,7 @@ export interface SeedPagina {
   contenuto: string;
   sezione: SezionePagina;
   ordine: number;
+  immagine?: string;
 }
 
 export const PAGINE_SEED: SeedPagina[] = [
@@ -32,6 +33,7 @@ export const PAGINE_SEED: SeedPagina[] = [
     sottotitolo: 'Il nostro Patrono',
     sezione: SezionePagina.PARROCCHIA,
     ordine: 2,
+    immagine: '/assets/santeligio-patrono.jpg',
     contenuto: `
 <p>Sant'Eligio di Noyon (Chaptelat, 588 circa – Noyon, 1º dicembre 660) è stato un orafo e poi alto funzionario della corte dei re merovingi; è venerato come santo dalla Chiesa cattolica. Dalla contrazione del nome francese Éloi nel medioevo in molte città italiane veniva chiamato semplicemente sant'Alo, sant'Alò o anche solo san Lo.</p>
 <p>Figlio di Eucherio e Terrigia, era di umili natali e apprese l'arte dell'oreficeria a Limoges presso il monetiere Abbone. Secondo la tradizione, Clotario II gli avrebbe commissionato un trono consegnandogli l'oro necessario per l'opera ed Eligio ne avrebbe realizzati due: fortemente impressionato dalla sua perizia e dalla sua onestà, il Re lo nominò orafo di corte e maestro della zecca.</p>
