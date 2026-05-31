@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────────────────────
 # Stage 1 — development
 # ─────────────────────────────────────────────────────────────
-FROM node:21-alpine AS development
+FROM node:20-alpine AS development
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ CMD ["npm", "run", "start:dev"]
 # ─────────────────────────────────────────────────────────────
 # Stage 2 — build
 # ─────────────────────────────────────────────────────────────
-FROM node:21-alpine AS build
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
@@ -29,7 +29,7 @@ RUN npm run build
 # ─────────────────────────────────────────────────────────────
 # Stage 3 — production (immagine minima)
 # ─────────────────────────────────────────────────────────────
-FROM node:21-alpine AS production
+FROM node:20-alpine AS production
 
 ENV NODE_ENV=production
 

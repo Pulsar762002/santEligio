@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────────────────────
 # Stage 1 — development (usato da docker-compose.override.yml)
 # ─────────────────────────────────────────────────────────────
-FROM node:21-alpine AS development
+FROM node:20-alpine AS development
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ CMD ["npm", "run", "start", "--", "--host", "0.0.0.0", "--poll", "2000"]
 # ─────────────────────────────────────────────────────────────
 # Stage 2 — build (produce /app/dist)
 # ─────────────────────────────────────────────────────────────
-FROM node:21-alpine AS build
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
