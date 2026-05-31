@@ -8,9 +8,10 @@ export class NewsService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/news`;
 
-  getAll(categoria?: CategoriaNews) {
+  getAll(categoria?: CategoriaNews, tutti = false) {
     const params: Record<string, string> = {};
     if (categoria) params['categoria'] = categoria;
+    if (tutti) params['tutti'] = 'true';
     return this.http.get<News[]>(this.base, { params });
   }
 

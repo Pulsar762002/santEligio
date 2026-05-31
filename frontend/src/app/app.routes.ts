@@ -52,5 +52,10 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     loadComponent: () => import('./pages/admin/eventi/admin-eventi.component').then(m => m.AdminEventiComponent),
   },
+  {
+    path: 'admin/news',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./pages/admin/news/admin-news.component').then(m => m.AdminNewsComponent),
+  },
   { path: '**', redirectTo: '' },
 ];
