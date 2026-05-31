@@ -1,0 +1,79 @@
+import { Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { GruppiService } from '../../core/services/gruppi.service';
+import { AreaGruppo, AREA_LABELS } from '../../core/models/gruppo.model';
+
+@Component({
+  selector: 'app-gruppi',
+  standalone: true,
+  template: `
+    <section class="hero-sm">
+      <div class="container">
+        <h1>Gruppi e Movimenti</h1>
+        <p>Le realtà che animano la vita della comunità parrocchiale.</p>
+      </div>
+    </section>
+
+    <div class="container page-content">
+      @for (gruppo of aree(); track gruppo.area) {
+        <section class="area">
+          <h2>{{ label(gruppo.area) }}</h2>
+          <div class="card-grid">
+            @for (g of gruppo.gruppi; track g._id) {
+              <article class="card gruppo-card">
+                <h3>{{ g.nome }}</h3>
+                @if (g.descrizione) { <p>{{ g.descrizione }}</p> }
+                @if (g.referente) { <p class="meta"><strong>Referente:</strong> {{ g.referente }}</p> }
+                @if (g.contatto) { <p class="meta">{{ g.contatto }}</p> }
+              </article>
+            }
+          </div>
+        </section>
+      }
+
+      @if (aree().length === 0) {
+        <p class="empty">Nessun gruppo disponibile.</p>
+      }
+    </div>
+  `,
+  styles: [`
+    .hero-sm {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+      color: white;
+      padding: 2.5rem 0;
+      text-align: center;
+    }
+    .hero-sm h1 { color: white; margin-bottom: .4rem; }
+    .hero-sm p { opacity: .85; margin: 0; }
+    .area { margin-bottom: 2.75rem; }
+    .area h2 {
+      border-left: 4px solid var(--color-secondary);
+      padding-left: .75rem;
+      margin-bottom: 1rem;
+    }
+    .gruppo-card h3 { color: var(--color-primary); }
+    .gruppo-card p { margin: .35rem 0 0; font-size: .95rem; }
+    .meta { color: var(--color-text-muted); font-size: .88rem; }
+  `],
+})
+export class GruppiComponent {
+  private service = inject(GruppiService);
+
+  private readonly gruppi = toSignal(this.service.getAll(), { initialValue: [] });
+
+  readonly aree = computed(() => {
+    const order: AreaGruppo[] = ['liturgia', 'catechesi', 'carita'];
+    return order
+      .map(area => ({
+        area,
+        gruppi: this.gruppi()
+          .filter(g => g.area === area)
+          .sort((a, b) => a.ordine - b.ordine),
+      }))
+      .filter(g => g.gruppi.length > 0);
+  });
+
+  label(area: AreaGruppo): string {
+    return AREA_LABELS[area];
+  }
+}

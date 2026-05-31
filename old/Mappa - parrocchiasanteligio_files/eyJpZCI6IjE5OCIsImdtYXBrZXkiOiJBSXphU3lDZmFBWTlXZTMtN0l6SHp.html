@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body, html {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #map {
+            height: 100%;
+        }
+        #iframe {
+            height: 100%;
+            width: 100%;
+            border: 0;
+        }
+    </style>
+    </head>
+<body>
+    
+            <iframe id="iframe" frameborder="0" referrerpolicy="no-referrer-when-downgrade" allowfullscreen="" src="eyJpZCI6IjE5OCIsImdtYXBrZXkiOiJBSXphU3lDZmFBWTlXZTMtN0l6SHpwbGtm/place.html"></iframe>
+    
+    <!-- common -->
+    <script src="eyJpZCI6IjE5OCIsImdtYXBrZXkiOiJBSXphU3lDZmFBWTlXZTMtN0l6SHpwbGtm/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="eyJpZCI6IjE5OCIsImdtYXBrZXkiOiJBSXphU3lDZmFBWTlXZTMtN0l6SHpwbGtm/mapClass.js"></script>
+
+    <script>
+        var id = '198';
+        var domain = 'parrocchiasanteligio.it';
+        var gmapkey = 'AIzaSyCfaAY9We3-7IzHzplkfOQ_qKI_btM1g3I';
+        var component = 'map';
+        var index = 0;
+        var lang = 'it';
+
+        function initMap(){
+            if (id && component){
+                window['Mappa'] = new Mappa(id, domain, gmapkey, component, index, lang);
+
+                Mappa.init(function(){
+
+                    /** callback only if not mappaimmobili */
+
+                    // set data
+                    var action = 'setEmbed';
+
+                    var is_pro = true;
+                    var animazione = 'none';
+                    var coordinateGenerali = JSON.parse('{"lt":"41.9056242","ln":"12.6840533","mlt":"41.9056242","mln":"12.6840533","p":"14","t":"n"}');
+                    var arrayCoordinate = [{"lt":"41.9056242","ln":"12.6840533","mlt":"41.9056242","mln":"12.6840533","p":"14","t":"n","name":"Via del Fosso dell\u0027Osa, 435, 00132 Roma RM, Italy","pid":null}];
+
+                    // static map sizes
+                    var width = 1170;
+                    var height = 500;
+
+                    var data = {
+                        'is_pro': is_pro,
+                        'domain': domain,
+                        'animazione': animazione,
+                        'coordinateGenerali': coordinateGenerali,
+                        'arrayCoordinate': arrayCoordinate,
+                        'width': width,
+                        'height': height
+                    };
+
+                    Mappa.mapStart(action, data);
+                });
+            }
+            else {
+                console.log('no valid component id');
+            }
+        }
+    </script>
+
+            <!-- embedded or static map -->
+        <script>
+            initMap();
+        </script>
+    
+    
+    
+</body></html>

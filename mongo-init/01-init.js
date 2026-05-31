@@ -52,11 +52,16 @@ db.createCollection('gruppi');
 db.createCollection('pagine');
 db.createCollection('media');
 db.createCollection('utenti');
+db.createCollection('intenzioni_preghiera');
 
 // ── Indici ────────────────────────────────────────────────────
 db.news.createIndex({ createdAt: -1 });
 db.news.createIndex({ categoria: 1, pubblicato: 1 });
 db.eventi.createIndex({ dataInizio: 1 });
 db.utenti.createIndex({ email: 1 }, { unique: true });
+db.pagine.createIndex({ slug: 1 }, { unique: true });
+db.pagine.createIndex({ sezione: 1, ordine: 1 });
+db.gruppi.createIndex({ area: 1, ordine: 1 });
+db.intenzioni_preghiera.createIndex({ createdAt: -1 });
 
 print('✅  MongoDB inizializzato: DB santeligio, utente app, collezioni e indici creati.');

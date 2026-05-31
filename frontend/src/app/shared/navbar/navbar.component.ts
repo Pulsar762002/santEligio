@@ -12,9 +12,13 @@ import { AuthService } from '../../core/services/auth.service';
         <a routerLink="/" class="brand">Parrocchia Sant'Eligio</a>
         <ul class="nav-links">
           <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a></li>
+          <li><a routerLink="/parrocchia" routerLinkActive="active">La Parrocchia</a></li>
           <li><a routerLink="/notizie" routerLinkActive="active">Notizie</a></li>
           <li><a routerLink="/eventi" routerLinkActive="active">Eventi</a></li>
           <li><a routerLink="/orari-messe" routerLinkActive="active">Orari Messe</a></li>
+          <li><a routerLink="/gruppi" routerLinkActive="active">Gruppi</a></li>
+          <li><a routerLink="/intenzioni-preghiera" routerLinkActive="active">Intenzioni</a></li>
+          <li><a routerLink="/p/contatti" routerLinkActive="active">Contatti</a></li>
           @if (auth.isLoggedIn()) {
             <li><a routerLink="/admin" routerLinkActive="active">Admin</a></li>
             <li><button class="btn-logout" (click)="logout()">Esci</button></li>

@@ -6,8 +6,9 @@ import { Component } from '@angular/core';
   template: `
     <footer class="footer">
       <div class="container">
-        <p>Parrocchia di Sant'Eligio &mdash; Via Sant'Eligio &mdash; <a href="mailto:parrocchia&#64;santeligio.it">parrocchia&#64;santeligio.it</a></p>
-        <p class="copy">&copy; {{ year }} Parrocchia di Sant'Eligio</p>
+        <p>Parrocchia di Sant'Eligio &mdash; Via Fosso dell'Osa, 435 &mdash; 00132 Roma (RM)</p>
+        <p>Tel. 06 2261045 &mdash; <a href="mailto:info&#64;parrocchiasanteligio.it">info&#64;parrocchiasanteligio.it</a></p>
+        <p class="copy">&copy; {{ year }} Parrocchia di Sant'Eligio &mdash; C.F. 80175070582</p>
       </div>
     </footer>
   `,

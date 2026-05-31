@@ -7,6 +7,9 @@ import { NewsModule } from './news/news.module';
 import { EventiModule } from './eventi/eventi.module';
 import { OrariMesseModule } from './orari-messe/orari-messe.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { PagineModule } from './pagine/pagine.module';
+import { GruppiModule } from './gruppi/gruppi.module';
+import { IntenzioniPreghieraModule } from './intenzioni-preghiera/intenzioni-preghiera.module';
 
 @Module({
   imports: [
@@ -24,6 +27,9 @@ import { UploadsModule } from './uploads/uploads.module';
     EventiModule,
     OrariMesseModule,
     UploadsModule,
+    PagineModule,
+    GruppiModule,
+    IntenzioniPreghieraModule,
   ],
 })
 export class AppModule {}

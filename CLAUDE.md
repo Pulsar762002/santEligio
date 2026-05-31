@@ -55,10 +55,11 @@ The DB has no admin out of the box. After the backend image is built, seed one (
 # set ADMIN_EMAIL / ADMIN_PASSWORD in .env first
 make shell-backend
 npm run seed            # runs node dist/seed → creates the admin in the `utenti` collection
+npm run seed:contenuti  # runs node dist/seed-contenuti → carica pagine/gruppi/orari dal vecchio sito (idempotente)
 ```
 
 Mongoose collection names are pinned explicitly via `@Schema({ collection: ... })`
-(`utenti`, `eventi`, `orari_messe`, `news`) so they match the validators and indexes
+(`utenti`, `eventi`, `orari_messe`, `news`, `pagine`, `gruppi`, `intenzioni_preghiera`) so they match the validators and indexes
 declared in `mongo-init/01-init.js`. Do not rely on Mongoose's default pluralization.
 
 ## Local dev URLs
@@ -97,7 +98,8 @@ Database: `santeligio`. The init script (`mongo-init/01-init.js`) creates:
 - Application user `santeligio_app` (readWrite on `santeligio` DB) — backend should connect with this user, not root
 - Collections with schema validation: `news`, `eventi`
 - Plain collections: `orari_messe`, `sacramenti`, `gruppi`, `pagine`, `media`, `utenti`
-- Indexes: `news.createdAt`, `news.{categoria,pubblicato}`, `eventi.dataInizio`, `utenti.email` (unique)
+- Plain collection: `intenzioni_preghiera`
+- Indexes: `news.createdAt`, `news.{categoria,pubblicato}`, `eventi.dataInizio`, `utenti.email` (unique), `pagine.slug` (unique), `pagine.{sezione,ordine}`, `gruppi.{area,ordine}`, `intenzioni_preghiera.createdAt`
 
 The `news` collection uses `categoria` enum: `liturgia | catechismo | caritas | eventi | comunicati`.
 
@@ -112,8 +114,15 @@ All routes are prefixed with `/api`. GET endpoints are public; write operations 
 | `eventi` | `GET /api/eventi[?tutti=true]`, `GET /api/eventi/prossimi[?limit=5]`, `GET /api/eventi/:id`, `POST/PATCH/DELETE` (JWT) |
 | `orari-messe` | `GET /api/orari-messe[?tipo=feriale\|festiva\|prefestiva]`, `GET /api/orari-messe/:id`, `POST/PATCH/DELETE` (JWT) |
 | `uploads` | `POST /api/uploads` (JWT, multipart `file` field) → `{ url }` |
+| `pagine` | `GET /api/pagine[?sezione=&tutte=true]`, `GET /api/pagine/:slug`, `POST/PATCH/DELETE` (JWT) — contenuti statici |
+| `gruppi` | `GET /api/gruppi[?area=liturgia\|catechesi\|carita&tutti=true]`, `GET /api/gruppi/:id`, `POST/PATCH/DELETE` (JWT) |
+| `intenzioni-preghiera` | `POST /api/intenzioni-preghiera` (**pubblico**), `GET`, `PATCH /:id` (segna `letta`), `DELETE /:id` (JWT) |
 
 `CategoriaNews` enum: `liturgia \| catechismo \| caritas \| eventi \| comunicati`
+
+`SezionePagina` enum: `parrocchia \| parroco \| diacono \| caritas \| consultorio \| organismi \| sacramenti \| gruppi \| altro`. `AreaGruppo` enum: `liturgia \| catechesi \| carita`.
+
+I contenuti del vecchio sito (`old/`) sono estratti in `src/seed-data/` (`pagine.ts`, `gruppi.ts`, `orari-messe.ts`) e caricati con `npm run seed:contenuti` (idempotente, upsert su slug/nome/giorno+ora). Vedi `old/ANALISI.md`.
 
 ### Key env vars
 
@@ -142,7 +151,7 @@ Pipeline in `.github/workflows/ci-cd.yml`:
 
 | Job | Trigger | Cosa fa |
 |---|---|---|
-| `backend` | ogni push / PR su `main` | `npm ci` → `npm run build` → `npm test` (39 smoke test) |
+| `backend` | ogni push / PR su `main` | `npm ci` → `npm run build` → `npm test` (68 smoke test) |
 | `frontend` | ogni push / PR su `main` | `npm ci` → `ng build --configuration production` |
 | `deploy` | push su `main` (dopo CI verde) | SSH nel server → `git pull` → `docker compose up --build -d` |
 
@@ -177,6 +186,10 @@ Il server deve avere già `.env` e `nginx/ssl/` configurati — il deploy fa sol
 | `/notizie/:id` | `NewsDetailComponent` |
 | `/eventi` | `EventiComponent` |
 | `/orari-messe` | `OrariMesseComponent` — grouped by tipo (festiva / prefestiva / feriale) |
+| `/parrocchia` | `ParrocchiaComponent` — hub: pagine statiche raggruppate per sezione |
+| `/gruppi` | `GruppiComponent` — gruppi e movimenti raggruppati per area |
+| `/intenzioni-preghiera` | `IntenzioniPreghieraComponent` — form pubblico di invio intenzione |
+| `/p/:slug` | `PaginaComponent` — render generico di una pagina statica (HTML via `[innerHTML]`) |
 | `/admin/login` | `AdminLoginComponent` |
 | `/admin` | `AdminDashboardComponent` — protected by `authGuard` |
 
