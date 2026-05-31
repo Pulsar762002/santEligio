@@ -6,10 +6,11 @@ import { environment } from '../../../environments/environment';
 export class UploadsService {
   private readonly http = inject(HttpClient);
 
-  // POST multipart al backend; il token viene aggiunto dall'authInterceptor.
+  // POST multipart al backend (registra anche il file nella libreria Media);
+  // il token viene aggiunto dall'authInterceptor.
   upload(file: File) {
     const data = new FormData();
     data.append('file', file);
-    return this.http.post<{ url: string }>(`${environment.apiUrl}/uploads`, data);
+    return this.http.post<{ url: string }>(`${environment.apiUrl}/media`, data);
   }
 }

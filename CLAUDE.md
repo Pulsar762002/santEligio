@@ -113,7 +113,7 @@ All routes are prefixed with `/api`. GET endpoints are public; write operations 
 | `news` | `GET /api/news[?categoria=&tutti=true]`, `GET /api/news/:id`, `POST/PATCH/DELETE` (JWT) |
 | `eventi` | `GET /api/eventi[?tutti=true]`, `GET /api/eventi/prossimi[?limit=5]`, `GET /api/eventi/:id`, `POST/PATCH/DELETE` (JWT) |
 | `orari-messe` | `GET /api/orari-messe[?tipo=feriale\|festiva\|prefestiva]`, `GET /api/orari-messe/:id`, `POST/PATCH/DELETE` (JWT) |
-| `uploads` | `POST /api/uploads` (JWT, multipart `file` field) → `{ url }` |
+| `media` | `POST /api/media` (JWT, multipart `file` field) → record Media `{ url, ... }`, `GET /api/media` (JWT), `DELETE /api/media/:id` (JWT) — libreria file; ogni upload è tracciato nella collection `media` e cancellabile (rimuove anche il file dal disco) |
 | `pagine` | `GET /api/pagine[?sezione=&tutte=true]`, `GET /api/pagine/:slug`, `POST/PATCH/DELETE` (JWT) — contenuti statici |
 | `gruppi` | `GET /api/gruppi[?area=liturgia\|catechesi\|carita&tutti=true]`, `GET /api/gruppi/:id`, `POST/PATCH/DELETE` (JWT) |
 | `intenzioni-preghiera` | `POST /api/intenzioni-preghiera` (**pubblico**), `GET`, `PATCH /:id` (segna `letta`), `DELETE /:id` (JWT) |
@@ -206,5 +206,5 @@ Il server deve avere già `.env` e `nginx/ssl/` configurati — il deploy fa sol
 
 - Jest (`*.spec.ts` next to the file under test); run with `npm test`. Requires `@types/jest` (in devDependencies).
 - Unit/smoke tests only — Mongoose models and other deps are mocked (`getModelToken`, `useValue`), so **no MongoDB is needed** and the suite runs in seconds. The CI `backend` job runs it on every push/PR.
-- Covered: `auth`, `news`, `eventi`, `orari-messe` (services + controllers). `uploads` is left uncovered (pure Multer config).
+- Covered: `auth`, `news`, `eventi`, `orari-messe` (services + controllers). `media` upload is left uncovered (pure Multer config).
 - Pattern: build the testing module with `Test.createTestingModule`, inject mocked collaborators, assert the query filter/sort passed to the model and that `NotFoundException` is thrown on missing ids.

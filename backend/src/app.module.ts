@@ -6,7 +6,7 @@ import { UsersModule } from './users/users.module';
 import { NewsModule } from './news/news.module';
 import { EventiModule } from './eventi/eventi.module';
 import { OrariMesseModule } from './orari-messe/orari-messe.module';
-import { UploadsModule } from './uploads/uploads.module';
+import { MediaModule } from './media/media.module';
 import { PagineModule } from './pagine/pagine.module';
 import { GruppiModule } from './gruppi/gruppi.module';
 import { IntenzioniPreghieraModule } from './intenzioni-preghiera/intenzioni-preghiera.module';
@@ -26,7 +26,7 @@ import { IntenzioniPreghieraModule } from './intenzioni-preghiera/intenzioni-pre
     NewsModule,
     EventiModule,
     OrariMesseModule,
-    UploadsModule,
+    MediaModule,
     PagineModule,
     GruppiModule,
     IntenzioniPreghieraModule,

@@ -105,6 +105,6 @@ export class AdminDashboardComponent {
     { label: 'Eventi', description: 'Crea e aggiorna gli eventi in calendario.', icon: 'E', route: '/admin/eventi', available: true },
     { label: 'Notizie', description: 'Pubblica e gestisci le notizie parrocchiali.', icon: 'N', route: '/admin/news', available: true },
     { label: 'Orari Messe', description: 'Modifica gli orari delle celebrazioni.', icon: 'M', route: '/admin/orari-messe', available: true },
-    { label: 'Media', description: 'Carica immagini e documenti PDF.', icon: 'F', route: '/admin/media', available: false },
+    { label: 'Media', description: 'Carica immagini e documenti PDF.', icon: 'F', route: '/admin/media', available: true },
   ];
 }

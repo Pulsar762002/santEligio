@@ -62,5 +62,10 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     loadComponent: () => import('./pages/admin/orari-messe/admin-orari-messe.component').then(m => m.AdminOrariMesseComponent),
   },
+  {
+    path: 'admin/media',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./pages/admin/media/admin-media.component').then(m => m.AdminMediaComponent),
+  },
   { path: '**', redirectTo: '' },
 ];
