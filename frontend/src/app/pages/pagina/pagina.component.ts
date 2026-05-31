@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap, startWith, catchError } from 'rxjs/operators';
@@ -37,7 +37,8 @@ type Stato =
               }
             </header>
             @if (pagina()!.immagine) {
-              <img [src]="pagina()!.immagine" [alt]="pagina()!.titolo" class="pagina-img">
+              <img [src]="pagina()!.immagine" [alt]="pagina()!.titolo"
+                   class="pagina-img" [class.banner]="imgLandscape()" (load)="onImgLoad($event)">
             }
             <div class="prosa" [innerHTML]="pagina()!.contenuto"></div>
           </article>
@@ -70,8 +71,18 @@ type Stato =
       border: 4px solid white;
       box-shadow: 0 8px 24px rgba(0,0,0,.15);
     }
+    /* immagine orizzontale: banner allargato oltre la colonna del testo, centrato */
+    .pagina-img.banner {
+      float: none;
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(1100px, 92vw);
+      max-width: none;
+      margin: 0 0 2rem;
+    }
     @media (max-width: 540px) {
-      .pagina-img {
+      .pagina-img:not(.banner) {
         float: none;
         width: 100%;
         max-width: 320px;
@@ -100,6 +111,14 @@ type Stato =
 export class PaginaComponent {
   private route = inject(ActivatedRoute);
   private service = inject(PagineService);
+
+  // true se l'immagine è orizzontale → mostrata come banner a tutta larghezza
+  readonly imgLandscape = signal(false);
+
+  onImgLoad(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    this.imgLandscape.set(img.naturalWidth >= img.naturalHeight * 1.3);
+  }
 
   readonly state = toSignal(
     this.route.paramMap.pipe(

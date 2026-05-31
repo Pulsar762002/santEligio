@@ -20,6 +20,7 @@ export const PAGINE_SEED: SeedPagina[] = [
     titolo: 'Storia della Parrocchia di S. Eligio',
     sezione: SezionePagina.PARROCCHIA,
     ordine: 1,
+    immagine: '/assets/ChiesaSantEligioDallAlto.webp',
     contenuto: `
 <p>La parrocchia è stata eretta il 25 giugno 1963 con il decreto del Cardinale Vicario Clemente Micara "Succrescente in dies" ed affidata al clero diocesano di Roma. Dal 1968 fino al 2007 è stato parroco il Rev.do Mons. Rino Cunial.</p>
 <p>Il territorio, con decreto del Cardinale Vicario Camillo Ruini del 27 febbraio 1995, è stato determinato entro i seguenti nuovi confini: "Via Prenestina - Fosso dell'Osa, fino all'intersezione con Via Carpinone - Via Carpinone - Fosso di Montegiardino per breve tratto - Linea ideale tangente all'abitato di Montegiardino fino ad intersecare il Fosso dei Ponzoni al punto finale della linea ideale proveniente dalla fine di Via della Riserva Nuova - Via della Riserva Nuova fino ad intersecare la Via Prenestina".</p>
@@ -47,13 +48,14 @@ export const PAGINE_SEED: SeedPagina[] = [
     titolo: 'Elenco dei Parroci succedutisi a S. Eligio',
     sezione: SezionePagina.PARROCCHIA,
     ordine: 3,
+    immagine: '/assets/ElencoParroci.webp',
     contenuto: `
 <ul>
   <li>Monsignore Reverendissimo don Rino Cunial &dagger; (1968 - 2007)</li>
   <li>Molto Reverendo don Joseph Alexander de León (2007 - 2020)</li>
   <li>Reverendo don Duilio Colantoni (Vicario parrocchiale)</li>
   <li>Reverendo don Juan José Arcila Arteaga (Vicario parrocchiale)</li>
-  <li>Molto Reverendo Padre Dario Frattini (2020 - ad multos annos feliciter)</li>
+  <li><strong>Molto Reverendo Padre Dario Frattini (2020 - ad multos annos feliciter)</strong></li>
 </ul>
 `.trim(),
   },
@@ -212,88 +214,6 @@ export const PAGINE_SEED: SeedPagina[] = [
     titolo: 'Stradario del territorio parrocchiale',
     sezione: SezionePagina.PARROCCHIA,
     ordine: 4,
-    contenuto: `
-<ul>
-  <li>Via Acciano – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Aielli – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Ateleta – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Balsorano – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Barete – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Barrea – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Borrello – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Bucchianico – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Bugnara – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Canosa Sannita – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Canzano – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Carpinone – 00132 – Lunghezza (RM) ( numeri dispari )</li>
-  <li>Via Casacanditella – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Casalanguida – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Castel Frentano – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Castel di Sangro – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Castelmauro – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Cermignano – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Civitella Alfedena – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Collecorvino – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Colledara – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Crecchio – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Crognaleto – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Cugnoli – 00132 – Lunghezza (RM)</li>
-  <li>Via Cupello – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Don Pirro Scavizzi – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Duronia – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Fara S. Martino – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Filetto – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Fontecchio – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Frisa – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Furci – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Gambereale – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Gessopalena – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Gissi – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Guardialfiera – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Larino – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Lentella – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Lettopalena – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Lucito – 00132 – Lunghezza (RM)</li>
-  <li>Via Macchiagodena – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Mafalda – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Massa d’Albe – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Montagano – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Montaquila – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Montazzoli – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Montefino – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Montelapiano – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Montemitrio – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Notaresco – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Oricola – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Palena – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Pennadomo – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Perano – 00132 – ROMA ( tutti i numeri da 1 a 9, pari dal 10 al 30 )</li>
-  <li>Via Pescolanciano – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Pietrabbondante – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Pietranico – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Pizzo Ferrato – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Pollutri – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Prenestina – 00132 – ROMA ( numeri dispari da 1631 a 1791 )</li>
-  <li>Via Rapino – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Rocca di Botte – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Rocca di Cambio – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Roccaspinalveti – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Roccavivara – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Roio del Sangro – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Schiavi di Abruzzo – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Sepino – 00132 – Lunghezza (RM)</li>
-  <li>Via Sessano – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Tollo – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Treglio – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Vastogirardi – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Villalfonsina – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Villamagna – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via Vinchiaturo – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via del Fosso Scilicino – 00132 – Castelverde di Lunghezza (RM) ( tutti i numeri da 7 a 61 )</li>
-  <li>Via del Fosso dell’Osa – 00132 – ROMA ( numeri pari e i dispari fino a 601 )</li>
-  <li>Via della Riserva Nuova – 00132 – Castelverde di Lunghezza (RM)</li>
-  <li>Via delle Cerquete – 00132 – ROMA ( numeri dispari da 143 in poi, pari da 146 )</li>
-</ul>
-`.trim(),
+    contenuto: `<p>Il territorio parrocchiale è suddiviso in contrade. Di seguito le vie appartenenti a ciascuna contrada.</p>`.trim(),
   },
 ];

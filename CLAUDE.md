@@ -114,6 +114,7 @@ All routes are prefixed with `/api`. GET endpoints are public; write operations 
 | `eventi` | `GET /api/eventi[?tutti=true]`, `GET /api/eventi/prossimi[?limit=5]`, `GET /api/eventi/:id`, `POST/PATCH/DELETE` (JWT) |
 | `orari-messe` | `GET /api/orari-messe[?tipo=feriale\|festiva\|prefestiva]`, `GET /api/orari-messe/:id`, `POST/PATCH/DELETE` (JWT) |
 | `media` | `POST /api/media` (JWT, multipart `file` field) → record Media `{ url, ... }`, `GET /api/media` (JWT), `DELETE /api/media/:id` (JWT) — libreria file; ogni upload è tracciato nella collection `media` e cancellabile (rimuove anche il file dal disco) |
+| `stradario` | `GET /api/stradario` (pubblico) — vie del territorio per contrada (collection `stradario`, seed-managed); reso da `/p/stradario` |
 | `pagine` | `GET /api/pagine[?sezione=&tutte=true]`, `GET /api/pagine/:slug`, `POST/PATCH/DELETE` (JWT) — contenuti statici |
 | `gruppi` | `GET /api/gruppi[?area=liturgia\|catechesi\|carita&tutti=true]`, `GET /api/gruppi/:id`, `POST/PATCH/DELETE` (JWT) |
 | `intenzioni-preghiera` | `POST /api/intenzioni-preghiera` (**pubblico**), `GET`, `PATCH /:id` (segna `letta`), `DELETE /:id` (JWT) |
@@ -122,7 +123,7 @@ All routes are prefixed with `/api`. GET endpoints are public; write operations 
 
 `SezionePagina` enum: `parrocchia \| parroco \| diacono \| caritas \| consultorio \| organismi \| sacramenti \| gruppi \| altro`. `AreaGruppo` enum: `liturgia \| catechesi \| carita`.
 
-I contenuti del vecchio sito (`old/`) sono estratti in `src/seed-data/` (`pagine.ts`, `gruppi.ts`, `orari-messe.ts`) e caricati con `npm run seed:contenuti` (idempotente, upsert su slug/nome/ordine). Vedi `old/ANALISI.md`.
+I contenuti del vecchio sito (`old/`) sono estratti in `src/seed-data/` (`pagine.ts`, `gruppi.ts`, `orari-messe.ts`, `stradario.ts`) e caricati con `npm run seed:contenuti` (idempotente, upsert su slug/nome/ordine/via). Vedi `old/ANALISI.md`.
 
 ### Key env vars
 
@@ -189,6 +190,7 @@ Il server deve avere già `.env` e `nginx/ssl/` configurati — il deploy fa sol
 | `/parrocchia` | `ParrocchiaComponent` — hub: pagine statiche raggruppate per sezione |
 | `/gruppi` | `GruppiComponent` — gruppi e movimenti raggruppati per area |
 | `/intenzioni-preghiera` | `IntenzioniPreghieraComponent` — form pubblico di invio intenzione |
+| `/p/stradario` | `StradarioComponent` — vie del territorio raggruppate per contrada (rotta dedicata, prima della generica) |
 | `/p/:slug` | `PaginaComponent` — render generico di una pagina statica (HTML via `[innerHTML]`) |
 | `/admin/login` | `AdminLoginComponent` |
 | `/admin` | `AdminDashboardComponent` — protected by `authGuard` |

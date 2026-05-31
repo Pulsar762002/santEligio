@@ -10,9 +10,11 @@ import { AppModule } from './app.module';
 import { Pagina } from './pagine/schemas/pagina.schema';
 import { Gruppo } from './gruppi/schemas/gruppo.schema';
 import { OrarioMessa } from './orari-messe/schemas/orario-messa.schema';
+import { Strada } from './stradario/schemas/strada.schema';
 import { PAGINE_SEED } from './seed-data/pagine';
 import { GRUPPI_SEED } from './seed-data/gruppi';
 import { ORARI_MESSE_SEED } from './seed-data/orari-messe';
+import { STRADARIO_SEED } from './seed-data/stradario';
 
 async function seed() {
   const app = await NestFactory.createApplicationContext(AppModule, {
@@ -23,6 +25,7 @@ async function seed() {
     const pagine = app.get<Model<Pagina>>(getModelToken(Pagina.name));
     const gruppi = app.get<Model<Gruppo>>(getModelToken(Gruppo.name));
     const orari = app.get<Model<OrarioMessa>>(getModelToken(OrarioMessa.name));
+    const stradario = app.get<Model<Strada>>(getModelToken(Strada.name));
 
     for (const p of PAGINE_SEED) {
       await pagine.updateOne({ slug: p.slug }, { $set: p }, { upsert: true });
@@ -42,6 +45,16 @@ async function seed() {
       );
     }
     console.log(`✅  Orari messe: ${ORARI_MESSE_SEED.length} voci sincronizzate.`);
+
+    for (let i = 0; i < STRADARIO_SEED.length; i++) {
+      const s = STRADARIO_SEED[i];
+      await stradario.updateOne(
+        { via: s.via },
+        { $set: { ...s, ordine: i } },
+        { upsert: true },
+      );
+    }
+    console.log(`✅  Stradario: ${STRADARIO_SEED.length} voci sincronizzate.`);
   } finally {
     await app.close();
   }

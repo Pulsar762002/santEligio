@@ -35,6 +35,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/intenzioni/intenzioni-preghiera.component').then(m => m.IntenzioniPreghieraComponent),
   },
   {
+    path: 'p/stradario',
+    loadComponent: () => import('./pages/stradario/stradario.component').then(m => m.StradarioComponent),
+  },
+  {
     path: 'p/:slug',
     loadComponent: () => import('./pages/pagina/pagina.component').then(m => m.PaginaComponent),
   },
