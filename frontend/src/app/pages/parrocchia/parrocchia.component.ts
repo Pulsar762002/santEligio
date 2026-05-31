@@ -10,17 +10,28 @@ const SEZIONI: SezionePagina[] = [
   'consultorio', 'organismi', 'sacramenti', 'gruppi', 'altro',
 ];
 
+// Logo opzionale accanto al titolo della sezione.
+const SEZIONE_IMG: Partial<Record<SezionePagina, string>> = {
+  caritas: '/assets/Caritas.webp',
+  consultorio: '/assets/ConsultorioAgape.webp',
+};
+
 @Component({
   selector: 'app-parrocchia',
   standalone: true,
   imports: [RouterLink],
   template: `
     <section class="hero-sm">
-      <div class="container">
-        <h1>{{ label(sezione()) }}</h1>
-        @if (sezione() === 'parrocchia') {
-          <p>Conosci la comunità di Sant'Eligio: la sua storia, i pastori, i servizi e gli organismi.</p>
+      <div class="container hero-inner">
+        @if (sezioneImg()) {
+          <img class="sez-logo" [src]="sezioneImg()" [alt]="label(sezione())" />
         }
+        <div>
+          <h1>{{ label(sezione()) }}</h1>
+          @if (sezione() === 'parrocchia') {
+            <p>Conosci la comunità di Sant'Eligio: la sua storia, i pastori, i servizi e gli organismi.</p>
+          }
+        </div>
       </div>
     </section>
 
@@ -51,6 +62,22 @@ const SEZIONI: SezionePagina[] = [
     }
     .hero-sm h1 { color: white; margin-bottom: .4rem; }
     .hero-sm p { opacity: .85; margin: 0; }
+    .hero-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      text-align: left;
+    }
+    .sez-logo {
+      height: 84px;
+      width: auto;
+      border-radius: 8px;
+      background: white;
+      padding: 6px;
+      flex: 0 0 auto;
+    }
     .pagina-card {
       display: flex;
       flex-direction: column;
@@ -95,6 +122,8 @@ export class ParrocchiaComponent {
       .filter(p => p.sezione === this.sezione())
       .sort((a, b) => a.ordine - b.ordine),
   );
+
+  readonly sezioneImg = computed(() => SEZIONE_IMG[this.sezione()] ?? null);
 
   label(sezione: SezionePagina): string {
     return SEZIONE_LABELS[sezione];

@@ -11,6 +11,12 @@ type Stato =
   | { status: 'ok'; pagina: Pagina }
   | { status: 'notfound' };
 
+// Logo opzionale accanto al titolo, per sezione.
+const SEZIONE_LOGO: Record<string, string> = {
+  caritas: '/assets/Caritas.webp',
+  consultorio: '/assets/ConsultorioAgape.webp',
+};
+
 @Component({
   selector: 'app-pagina',
   standalone: true,
@@ -31,10 +37,17 @@ type Stato =
         @case ('ok') {
           <article class="pagina">
             <header class="pagina-header">
-              <h1>{{ pagina()!.titolo }}</h1>
-              @if (pagina()!.sottotitolo) {
-                <p class="sottotitolo">{{ pagina()!.sottotitolo }}</p>
-              }
+              <div class="header-row">
+                @if (headerLogo()) {
+                  <img class="header-logo" [src]="headerLogo()" [alt]="pagina()!.titolo" />
+                }
+                <div>
+                  <h1>{{ pagina()!.titolo }}</h1>
+                  @if (pagina()!.sottotitolo) {
+                    <p class="sottotitolo">{{ pagina()!.sottotitolo }}</p>
+                  }
+                </div>
+              </div>
             </header>
             @if (pagina()!.immagine) {
               <img [src]="pagina()!.immagine" [alt]="pagina()!.titolo"
@@ -54,6 +67,13 @@ type Stato =
       margin-bottom: 1.75rem;
     }
     .pagina-header h1 { font-size: 2.1rem; margin-bottom: .25rem; }
+    .header-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .header-logo {
+      height: 72px;
+      width: auto;
+      border-radius: 8px;
+      flex: 0 0 auto;
+    }
     .sottotitolo {
       color: var(--color-text-muted);
       font-size: 1.1rem;
@@ -118,6 +138,11 @@ export class PaginaComponent {
   onImgLoad(event: Event): void {
     const img = event.target as HTMLImageElement;
     this.imgLandscape.set(img.naturalWidth >= img.naturalHeight * 1.3);
+  }
+
+  headerLogo(): string | null {
+    const p = this.pagina();
+    return p ? SEZIONE_LOGO[p.sezione] ?? null : null;
   }
 
   readonly state = toSignal(
