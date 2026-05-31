@@ -7,6 +7,9 @@ import { PARROCO_CATECHISMO } from './parroco-catechismo';
 import { PARROCO_CODICE_CANONICO } from './parroco-codice-canonico';
 import { DIACONO_CODICE_CANONICO } from './diacono-codice-canonico';
 import { DIACONO_CATECHISMO } from './diacono-catechismo';
+import { SACR_CRESIMA } from './sacramenti-cresima';
+import { SACR_COMUNIONE } from './sacramenti-comunione';
+import { SACR_MATRIMONIO } from './sacramenti-matrimonio';
 
 export interface SeedPagina {
   slug: string;
@@ -224,6 +227,30 @@ export const PAGINE_SEED: SeedPagina[] = [
     sezione: SezionePagina.SACRAMENTI,
     ordine: 1,
     contenuto: `<p>La preparazione al Sacramento del Battesimo verrà erogata direttamente da Padre Dario, con tempi e modalità concordati insieme a lui nel momento in cui si stabilirà la data del Battesimo.</p>`,
+  },
+  {
+    slug: 'catechismo-iniziazione-cristiana',
+    titolo: "Catechismo per l'Iniziazione Cristiana",
+    sottotitolo: 'Cammino verso la Prima Comunione',
+    sezione: SezionePagina.SACRAMENTI,
+    ordine: 2,
+    contenuto: SACR_COMUNIONE,
+  },
+  {
+    slug: 'corso-precresima',
+    titolo: 'Sacramento della Cresima',
+    sottotitolo: 'Corso di preparazione',
+    sezione: SezionePagina.SACRAMENTI,
+    ordine: 3,
+    contenuto: SACR_CRESIMA,
+  },
+  {
+    slug: 'corso-prematrimoniale',
+    titolo: 'Sacramento del Matrimonio',
+    sottotitolo: 'Corso di preparazione per le coppie',
+    sezione: SezionePagina.SACRAMENTI,
+    ordine: 4,
+    contenuto: SACR_MATRIMONIO,
   },
   {
     slug: 'contatti',

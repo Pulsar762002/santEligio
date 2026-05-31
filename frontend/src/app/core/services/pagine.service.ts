@@ -8,9 +8,10 @@ export class PagineService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/pagine`;
 
-  getAll(sezione?: SezionePagina) {
+  getAll(sezione?: SezionePagina, tutte = false) {
     const params: Record<string, string> = {};
     if (sezione) params['sezione'] = sezione;
+    if (tutte) params['tutte'] = 'true';
     return this.http.get<Pagina[]>(this.base, { params });
   }
 
