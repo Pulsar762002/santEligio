@@ -106,5 +106,6 @@ export class AdminDashboardComponent {
     { label: 'Notizie', description: 'Pubblica e gestisci le notizie parrocchiali.', icon: 'N', route: '/admin/news', available: true },
     { label: 'Orari Messe', description: 'Modifica gli orari delle celebrazioni.', icon: 'M', route: '/admin/orari-messe', available: true },
     { label: 'Media', description: 'Carica immagini e documenti PDF.', icon: 'F', route: '/admin/media', available: true },
+    { label: 'Stradario', description: 'Gestisci le vie del territorio per contrada.', icon: 'S', route: '/admin/stradario', available: true },
   ];
 }

@@ -71,5 +71,10 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     loadComponent: () => import('./pages/admin/media/admin-media.component').then(m => m.AdminMediaComponent),
   },
+  {
+    path: 'admin/stradario',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./pages/admin/stradario/admin-stradario.component').then(m => m.AdminStradarioComponent),
+  },
   { path: '**', redirectTo: '' },
 ];
