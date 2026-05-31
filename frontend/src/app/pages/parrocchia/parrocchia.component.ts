@@ -1,8 +1,14 @@
 import { Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs/operators';
 import { PagineService } from '../../core/services/pagine.service';
 import { SezionePagina, SEZIONE_LABELS } from '../../core/models/pagina.model';
+
+const SEZIONI: SezionePagina[] = [
+  'parrocchia', 'parroco', 'diacono', 'caritas',
+  'consultorio', 'organismi', 'sacramenti', 'gruppi', 'altro',
+];
 
 @Component({
   selector: 'app-parrocchia',
@@ -11,30 +17,27 @@ import { SezionePagina, SEZIONE_LABELS } from '../../core/models/pagina.model';
   template: `
     <section class="hero-sm">
       <div class="container">
-        <h1>La nostra Parrocchia</h1>
-        <p>Conosci la comunità di Sant'Eligio: la sua storia, i pastori, i servizi e gli organismi.</p>
+        <h1>{{ label(sezione()) }}</h1>
+        @if (sezione() === 'parrocchia') {
+          <p>Conosci la comunità di Sant'Eligio: la sua storia, i pastori, i servizi e gli organismi.</p>
+        }
       </div>
     </section>
 
     <div class="container page-content">
-      @for (gruppo of gruppi(); track gruppo.sezione) {
-        <section class="sezione">
-          <h2>{{ label(gruppo.sezione) }}</h2>
-          <div class="card-grid">
-            @for (pagina of gruppo.pagine; track pagina._id) {
-              <a class="card pagina-card" [routerLink]="['/p', pagina.slug]">
-                <h3>{{ pagina.titolo }}</h3>
-                @if (pagina.sottotitolo) {
-                  <p class="sottotitolo">{{ pagina.sottotitolo }}</p>
-                }
-                <span class="link-more">Leggi &rarr;</span>
-              </a>
-            }
-          </div>
-        </section>
-      }
-
-      @if (gruppi().length === 0) {
+      @if (pagine().length > 0) {
+        <div class="card-grid">
+          @for (pagina of pagine(); track pagina._id) {
+            <a class="card pagina-card" [routerLink]="['/p', pagina.slug]">
+              <h3>{{ pagina.titolo }}</h3>
+              @if (pagina.sottotitolo) {
+                <p class="sottotitolo">{{ pagina.sottotitolo }}</p>
+              }
+              <span class="link-more">Leggi &rarr;</span>
+            </a>
+          }
+        </div>
+      } @else {
         <p class="empty">Nessun contenuto disponibile.</p>
       }
     </div>
@@ -48,12 +51,6 @@ import { SezionePagina, SEZIONE_LABELS } from '../../core/models/pagina.model';
     }
     .hero-sm h1 { color: white; margin-bottom: .4rem; }
     .hero-sm p { opacity: .85; margin: 0; }
-    .sezione { margin-bottom: 2.75rem; }
-    .sezione h2 {
-      border-left: 4px solid var(--color-secondary);
-      padding-left: .75rem;
-      margin-bottom: 1rem;
-    }
     .pagina-card {
       display: flex;
       flex-direction: column;
@@ -79,23 +76,25 @@ import { SezionePagina, SEZIONE_LABELS } from '../../core/models/pagina.model';
 })
 export class ParrocchiaComponent {
   private service = inject(PagineService);
+  private route = inject(ActivatedRoute);
 
-  private readonly pagine = toSignal(this.service.getAll(), { initialValue: [] });
+  private readonly tutte = toSignal(this.service.getAll(), { initialValue: [] });
 
-  readonly gruppi = computed(() => {
-    const order: SezionePagina[] = [
-      'parrocchia', 'parroco', 'diacono', 'caritas',
-      'consultorio', 'organismi', 'sacramenti', 'altro',
-    ];
-    return order
-      .map(sezione => ({
-        sezione,
-        pagine: this.pagine()
-          .filter(p => p.sezione === sezione)
-          .sort((a, b) => a.ordine - b.ordine),
-      }))
-      .filter(g => g.pagine.length > 0);
-  });
+  readonly sezione = toSignal(
+    this.route.paramMap.pipe(
+      map(p => {
+        const s = p.get('sezione') as SezionePagina | null;
+        return s && SEZIONI.includes(s) ? s : 'parrocchia';
+      }),
+    ),
+    { initialValue: 'parrocchia' as SezionePagina },
+  );
+
+  readonly pagine = computed(() =>
+    this.tutte()
+      .filter(p => p.sezione === this.sezione())
+      .sort((a, b) => a.ordine - b.ordine),
+  );
 
   label(sezione: SezionePagina): string {
     return SEZIONE_LABELS[sezione];

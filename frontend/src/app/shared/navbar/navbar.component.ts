@@ -1,6 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../core/services/auth.service';
+import { PagineService } from '../../core/services/pagine.service';
+import { SezionePagina, SEZIONE_LABELS } from '../../core/models/pagina.model';
 
 @Component({
   selector: 'app-navbar',
@@ -19,7 +22,17 @@ import { AuthService } from '../../core/services/auth.service';
         </a>
         <ul class="nav-links">
           <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a></li>
-          <li><a routerLink="/parrocchia" routerLinkActive="active">La Parrocchia</a></li>
+          <li class="has-dropdown">
+            <a routerLink="/parrocchia" routerLinkActive="active">La Parrocchia <span class="caret" aria-hidden="true">▾</span></a>
+            @if (menuParrocchia().length > 0) {
+              <div class="dropdown">
+                @for (item of menuParrocchia(); track item.sezione) {
+                  <a [routerLink]="item.link" routerLinkActive="active"
+                     [routerLinkActiveOptions]="{ exact: true }">{{ label(item.sezione) }}</a>
+                }
+              </div>
+            }
+          </li>
           <li><a routerLink="/notizie" routerLinkActive="active">Notizie</a></li>
           <li><a routerLink="/eventi" routerLinkActive="active">Eventi</a></li>
           <li><a routerLink="/orari-messe" routerLinkActive="active">Orari Messe</a></li>
@@ -108,6 +121,45 @@ import { AuthService } from '../../core/services/auth.service';
     }
     .nav-links a.active,
     .nav-links a:hover { color: white; text-decoration: none; }
+
+    .has-dropdown { position: relative; }
+    .caret { font-size: .7rem; opacity: .85; }
+    .dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: .5rem;
+      min-width: 230px;
+      background: white;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 32px rgba(0,0,0,.2);
+      padding: .4rem;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-6px);
+      transition: opacity .15s, transform .15s, visibility .15s;
+      z-index: 200;
+    }
+    .has-dropdown:hover .dropdown,
+    .has-dropdown:focus-within .dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .dropdown a {
+      color: var(--color-text);
+      font-size: .95rem;
+      font-weight: 500;
+      padding: .5rem .7rem;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .dropdown a:hover { background: var(--color-bg-alt); color: var(--color-primary); text-decoration: none; }
+    .dropdown a.active { color: var(--color-primary); }
+
     .btn-logout {
       background: none;
       border: 1px solid rgba(255,255,255,.45);
@@ -123,6 +175,29 @@ import { AuthService } from '../../core/services/auth.service';
 export class NavbarComponent {
   protected auth = inject(AuthService);
   private router = inject(Router);
+  private pagineService = inject(PagineService);
+
+  private readonly pagine = toSignal(this.pagineService.getAll(), { initialValue: [] });
+
+  // Sottomenu "La Parrocchia": elenco delle sole sezioni che hanno pagine.
+  // Cliccando una sezione si apre la vista a card (/parrocchia/:sezione).
+  readonly menuParrocchia = computed(() => {
+    const order: SezionePagina[] = [
+      'parrocchia', 'parroco', 'diacono', 'caritas',
+      'consultorio', 'organismi', 'sacramenti', 'altro',
+    ];
+    const presenti = new Set(this.pagine().map(p => p.sezione));
+    return order
+      .filter(sezione => presenti.has(sezione))
+      .map(sezione => ({
+        sezione,
+        link: sezione === 'parrocchia' ? ['/parrocchia'] : ['/parrocchia', sezione],
+      }));
+  });
+
+  label(sezione: SezionePagina): string {
+    return SEZIONE_LABELS[sezione];
+  }
 
   logout(): void {
     this.auth.logout();

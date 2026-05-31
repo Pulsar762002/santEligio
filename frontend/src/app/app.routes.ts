@@ -27,6 +27,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/parrocchia/parrocchia.component').then(m => m.ParrocchiaComponent),
   },
   {
+    path: 'parrocchia/:sezione',
+    loadComponent: () => import('./pages/parrocchia/parrocchia.component').then(m => m.ParrocchiaComponent),
+  },
+  {
     path: 'gruppi',
     loadComponent: () => import('./pages/gruppi/gruppi.component').then(m => m.GruppiComponent),
   },

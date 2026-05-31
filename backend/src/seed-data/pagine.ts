@@ -3,6 +3,8 @@
 // Il campo `contenuto` è HTML: il frontend lo renderizza in modo sicuro.
 
 import { SezionePagina } from '../pagine/schemas/pagina.schema';
+import { PARROCO_CATECHISMO } from './parroco-catechismo';
+import { PARROCO_CODICE_CANONICO } from './parroco-codice-canonico';
 
 export interface SeedPagina {
   slug: string;
@@ -66,6 +68,28 @@ export const PAGINE_SEED: SeedPagina[] = [
     sezione: SezionePagina.PARROCO,
     ordine: 1,
     contenuto: `<p>Parroco della Parrocchia di S. Eligio dal 1° settembre 2020, già membro della Congregazione dei Canonici Regolari dell'Immacolata Concezione.</p>`,
+  },
+  {
+    slug: 'parroco-codice-canonico',
+    titolo: 'Il Parroco nel Codice di Diritto Canonico',
+    sezione: SezionePagina.PARROCO,
+    ordine: 2,
+    contenuto: PARROCO_CODICE_CANONICO,
+  },
+  {
+    slug: 'parroco-catechismo',
+    titolo: 'Il Parroco nel Catechismo della Chiesa Cattolica',
+    sezione: SezionePagina.PARROCO,
+    ordine: 3,
+    contenuto: PARROCO_CATECHISMO,
+  },
+  {
+    slug: 'biografia-parroco',
+    titolo: 'Biografia',
+    sottotitolo: 'Molto Reverendo Padre Dario Frattini',
+    sezione: SezionePagina.PARROCO,
+    ordine: 4,
+    contenuto: `<p><em>Contenuto in preparazione.</em></p>`,
   },
   {
     slug: 'biografia-diacono',
