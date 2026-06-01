@@ -1,11 +1,7 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../core/services/auth.service';
-import { PagineService } from '../../core/services/pagine.service';
-import { GruppiService } from '../../core/services/gruppi.service';
-import { SezionePagina, SEZIONE_LABELS } from '../../core/models/pagina.model';
-import { AreaGruppo, AREA_LABELS } from '../../core/models/gruppo.model';
+import { MENU } from './navbar.menu';
 
 @Component({
   selector: 'app-navbar',
@@ -23,35 +19,36 @@ import { AreaGruppo, AREA_LABELS } from '../../core/models/gruppo.model';
           <span>Parrocchia Sant'Eligio</span>
         </a>
         <ul class="nav-links">
-          <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a></li>
-          <li class="has-dropdown">
-            <a routerLink="/parrocchia" routerLinkActive="active">La Parrocchia <span class="caret" aria-hidden="true">▾</span></a>
-            @if (menuParrocchia().length > 0) {
-              <div class="dropdown">
-                @for (item of menuParrocchia(); track item.sezione) {
-                  <a [routerLink]="item.link" routerLinkActive="active"
-                     [routerLinkActiveOptions]="{ exact: true }">{{ label(item.sezione) }}</a>
-                }
-              </div>
+          @for (entry of menu; track entry.label) {
+            @if (entry.children) {
+              <li class="has-dropdown">
+                <a [routerLink]="entry.link ?? null" routerLinkActive="active">{{ entry.label }} <span class="caret" aria-hidden="true">▾</span></a>
+                <div class="dropdown">
+                  @for (group of entry.children; track group.label) {
+                    @if (group.children) {
+                      <div class="dropdown-sub">
+                        <span class="sub-trigger">{{ group.label }} <span class="caret-r" aria-hidden="true">›</span></span>
+                        <div class="flyout">
+                          @for (leaf of group.children; track leaf.label) {
+                            <a [routerLink]="leaf.link" routerLinkActive="active"
+                               [routerLinkActiveOptions]="{ exact: true }">{{ leaf.label }}</a>
+                          }
+                        </div>
+                      </div>
+                    } @else {
+                      <a [routerLink]="group.link" routerLinkActive="active"
+                         [routerLinkActiveOptions]="{ exact: true }">{{ group.label }}</a>
+                    }
+                  }
+                </div>
+              </li>
+            } @else {
+              <li>
+                <a [routerLink]="entry.link" routerLinkActive="active"
+                   [routerLinkActiveOptions]="{ exact: !!entry.exact }">{{ entry.label }}</a>
+              </li>
             }
-          </li>
-          <li><a routerLink="/notizie" routerLinkActive="active">Notizie</a></li>
-          <li><a routerLink="/eventi" routerLinkActive="active">Eventi</a></li>
-          <li><a routerLink="/orari-messe" routerLinkActive="active">Orari Messe</a></li>
-          <li class="has-dropdown">
-            <a routerLink="/gruppi" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Gruppi <span class="caret" aria-hidden="true">▾</span></a>
-            @if (menuGruppi().length > 0) {
-              <div class="dropdown">
-                @for (item of menuGruppi(); track item.area) {
-                  <a [routerLink]="['/gruppi', item.area]" routerLinkActive="active"
-                     [routerLinkActiveOptions]="{ exact: true }">{{ labelArea(item.area) }}</a>
-                }
-              </div>
-            }
-          </li>
-          <li><a routerLink="/galleria" routerLinkActive="active">Galleria</a></li>
-          <li><a routerLink="/intenzioni-preghiera" routerLinkActive="active">Intenzioni</a></li>
-          <li><a routerLink="/p/contatti" routerLinkActive="active">Contatti</a></li>
+          }
           @if (auth.isAdmin()) {
             <li><a routerLink="/admin" routerLinkActive="active">Admin</a></li>
           }
@@ -126,23 +123,26 @@ import { AreaGruppo, AREA_LABELS } from '../../core/models/gruppo.model';
     }
     .phone:hover { background: rgba(255,255,255,.28); text-decoration: none; }
     .phone .ico { font-size: .9rem; }
-    .nav-links a {
+    .nav-links > li > a {
       color: rgba(255,255,255,.8);
       font-size: 1.05rem;
       font-weight: 500;
       transition: color .15s;
+      cursor: pointer;
     }
-    .nav-links a.active,
-    .nav-links a:hover { color: white; text-decoration: none; }
+    .nav-links > li > a.active,
+    .nav-links > li > a:hover { color: white; text-decoration: none; }
 
     .has-dropdown { position: relative; }
     .caret { font-size: .7rem; opacity: .85; }
+    .caret-r { font-size: .9rem; opacity: .6; margin-left: auto; padding-left: .75rem; }
+
     .dropdown {
       position: absolute;
       top: 100%;
       left: 0;
       margin-top: .5rem;
-      min-width: 230px;
+      min-width: 240px;
       background: white;
       border: 1px solid var(--color-border);
       border-radius: var(--radius);
@@ -156,22 +156,59 @@ import { AreaGruppo, AREA_LABELS } from '../../core/models/gruppo.model';
       transition: opacity .15s, transform .15s, visibility .15s;
       z-index: 200;
     }
-    .has-dropdown:hover .dropdown,
-    .has-dropdown:focus-within .dropdown {
+    .has-dropdown:hover > .dropdown,
+    .has-dropdown:focus-within > .dropdown {
       opacity: 1;
       visibility: visible;
       transform: translateY(0);
     }
-    .dropdown a {
+    .dropdown a,
+    .dropdown .sub-trigger {
+      display: flex;
+      align-items: center;
       color: var(--color-text);
       font-size: .95rem;
       font-weight: 500;
       padding: .5rem .7rem;
       border-radius: 4px;
       white-space: nowrap;
+      cursor: pointer;
     }
-    .dropdown a:hover { background: var(--color-bg-alt); color: var(--color-primary); text-decoration: none; }
+    .dropdown a:hover,
+    .dropdown .sub-trigger:hover {
+      background: var(--color-bg-alt);
+      color: var(--color-primary);
+      text-decoration: none;
+    }
     .dropdown a.active { color: var(--color-primary); }
+
+    /* Terzo livello: flyout laterale */
+    .dropdown-sub { position: relative; }
+    .flyout {
+      position: absolute;
+      top: -.4rem;
+      left: 100%;
+      margin-left: .3rem;
+      min-width: 240px;
+      background: white;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 32px rgba(0,0,0,.2);
+      padding: .4rem;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(-6px);
+      transition: opacity .15s, transform .15s, visibility .15s;
+      z-index: 210;
+    }
+    .dropdown-sub:hover > .flyout,
+    .dropdown-sub:focus-within > .flyout {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+    }
 
     .btn-logout {
       background: none;
@@ -188,45 +225,8 @@ import { AreaGruppo, AREA_LABELS } from '../../core/models/gruppo.model';
 export class NavbarComponent {
   protected auth = inject(AuthService);
   private router = inject(Router);
-  private pagineService = inject(PagineService);
-  private gruppiService = inject(GruppiService);
 
-  private readonly pagine = toSignal(this.pagineService.getAll(), { initialValue: [] });
-  private readonly gruppi = toSignal(this.gruppiService.getAll(), { initialValue: [] });
-
-  // Sottomenu "La Parrocchia": elenco delle sole sezioni che hanno pagine.
-  // Cliccando una sezione si apre la vista a card (/parrocchia/:sezione).
-  readonly menuParrocchia = computed(() => {
-    const order: SezionePagina[] = [
-      'parrocchia', 'parroco', 'diacono', 'caritas',
-      'consultorio', 'organismi', 'sacramenti', 'altro',
-    ];
-    const presenti = new Set(this.pagine().map(p => p.sezione));
-    return order
-      .filter(sezione => presenti.has(sezione))
-      .map(sezione => ({
-        sezione,
-        link: sezione === 'parrocchia' ? ['/parrocchia'] : ['/parrocchia', sezione],
-      }));
-  });
-
-  // Sottomenu "Gruppi": elenco delle sole aree che hanno gruppi.
-  // Cliccando un'area si apre la vista a card (/gruppi/:area).
-  readonly menuGruppi = computed(() => {
-    const order: AreaGruppo[] = ['liturgia', 'catechesi', 'carita'];
-    const presenti = new Set(this.gruppi().map(g => g.area));
-    return order
-      .filter(area => presenti.has(area))
-      .map(area => ({ area }));
-  });
-
-  label(sezione: SezionePagina): string {
-    return SEZIONE_LABELS[sezione];
-  }
-
-  labelArea(area: AreaGruppo): string {
-    return AREA_LABELS[area];
-  }
+  protected readonly menu = MENU;
 
   logout(): void {
     this.auth.logout();

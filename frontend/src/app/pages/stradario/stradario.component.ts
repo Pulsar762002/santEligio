@@ -16,7 +16,7 @@ interface GruppoContrada {
   template: `
     <div class="container page-content">
       <header class="page-head">
-        <a routerLink="/parrocchia" class="back">&larr; La Parrocchia</a>
+        <a routerLink="/" class="back">&larr; Home</a>
         <h1>Stradario del territorio parrocchiale</h1>
         <p class="subtitle">Il territorio è suddiviso in contrade. Di seguito le vie appartenenti a ciascuna.</p>
       </header>

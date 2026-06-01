@@ -30,12 +30,22 @@ async function seed() {
     for (const p of PAGINE_SEED) {
       await pagine.updateOne({ slug: p.slug }, { $set: p }, { upsert: true });
     }
-    console.log(`✅  Pagine: ${PAGINE_SEED.length} voci sincronizzate.`);
+    // Il seed è autoritativo: rimuove le pagine non più previste (es. Parroco/Diacono).
+    const slugAttivi = PAGINE_SEED.map((p) => p.slug);
+    const pagineRimosse = await pagine.deleteMany({ slug: { $nin: slugAttivi } });
+    console.log(
+      `✅  Pagine: ${PAGINE_SEED.length} sincronizzate, ${pagineRimosse.deletedCount} rimosse.`,
+    );
 
     for (const g of GRUPPI_SEED) {
       await gruppi.updateOne({ nome: g.nome }, { $set: g }, { upsert: true });
     }
-    console.log(`✅  Gruppi: ${GRUPPI_SEED.length} voci sincronizzate.`);
+    // Il seed è autoritativo: rimuove i gruppi non più previsti.
+    const nomiAttivi = GRUPPI_SEED.map((g) => g.nome);
+    const gruppiRimossi = await gruppi.deleteMany({ nome: { $nin: nomiAttivi } });
+    console.log(
+      `✅  Gruppi: ${GRUPPI_SEED.length} sincronizzati, ${gruppiRimossi.deletedCount} rimossi.`,
+    );
 
     for (const o of ORARI_MESSE_SEED) {
       await orari.updateOne(

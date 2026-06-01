@@ -3,10 +3,6 @@
 // Il campo `contenuto` è HTML: il frontend lo renderizza in modo sicuro.
 
 import { SezionePagina } from '../pagine/schemas/pagina.schema';
-import { PARROCO_CATECHISMO } from './parroco-catechismo';
-import { PARROCO_CODICE_CANONICO } from './parroco-codice-canonico';
-import { DIACONO_CODICE_CANONICO } from './diacono-codice-canonico';
-import { DIACONO_CATECHISMO } from './diacono-catechismo';
 import { SACR_CRESIMA } from './sacramenti-cresima';
 import { SACR_COMUNIONE } from './sacramenti-comunione';
 import { SACR_MATRIMONIO } from './sacramenti-matrimonio';
@@ -64,71 +60,6 @@ export const PAGINE_SEED: SeedPagina[] = [
   <li>Reverendo don Juan José Arcila Arteaga (Vicario parrocchiale)</li>
   <li><strong>Molto Reverendo Padre Dario Frattini (2020 - ad multos annos feliciter)</strong></li>
 </ul>
-`.trim(),
-  },
-  {
-    slug: 'parroco',
-    titolo: 'Il Parroco',
-    sottotitolo: 'Molto Reverendo Padre Dario Frattini',
-    sezione: SezionePagina.PARROCO,
-    ordine: 1,
-    contenuto: `<p>Parroco della Parrocchia di S. Eligio dal 1° settembre 2020, già membro della Congregazione dei Canonici Regolari dell'Immacolata Concezione.</p>`,
-  },
-  {
-    slug: 'parroco-codice-canonico',
-    titolo: 'Il Parroco nel Codice di Diritto Canonico',
-    sezione: SezionePagina.PARROCO,
-    ordine: 2,
-    contenuto: PARROCO_CODICE_CANONICO,
-  },
-  {
-    slug: 'parroco-catechismo',
-    titolo: 'Il Parroco nel Catechismo della Chiesa Cattolica',
-    sezione: SezionePagina.PARROCO,
-    ordine: 3,
-    contenuto: PARROCO_CATECHISMO,
-  },
-  {
-    slug: 'biografia-parroco',
-    titolo: 'Biografia',
-    sottotitolo: 'Molto Reverendo Padre Dario Frattini',
-    sezione: SezionePagina.PARROCO,
-    ordine: 4,
-    contenuto: `<p><em>Contenuto in preparazione.</em></p>`,
-  },
-  {
-    slug: 'diacono',
-    titolo: 'Il Diacono',
-    sottotitolo: 'Reverendo Maurizio Fabrizi',
-    sezione: SezionePagina.DIACONO,
-    ordine: 1,
-    contenuto: `<p>Diacono permanente della Parrocchia di Sant'Eligio, ordinato il 20 novembre 1993. Offre il suo servizio nella liturgia, nella guida dell'Adorazione Eucaristica serale, nella predicazione e nei corsi di preparazione al matrimonio e di pastorale sanitaria.</p>`,
-  },
-  {
-    slug: 'diacono-codice-canonico',
-    titolo: 'Il Diacono nel Codice di Diritto Canonico',
-    sezione: SezionePagina.DIACONO,
-    ordine: 2,
-    contenuto: DIACONO_CODICE_CANONICO,
-  },
-  {
-    slug: 'diacono-catechismo',
-    titolo: 'Il Diacono nel Catechismo della Chiesa Cattolica',
-    sezione: SezionePagina.DIACONO,
-    ordine: 3,
-    contenuto: DIACONO_CATECHISMO,
-  },
-  {
-    slug: 'biografia-diacono',
-    titolo: 'Biografia',
-    sottotitolo: 'Reverendo Maurizio Fabrizi',
-    sezione: SezionePagina.DIACONO,
-    ordine: 4,
-    contenuto: `
-<p>Nato a Roma il 12 febbraio 1952 da famiglia contadina, cattolica praticante, di tipo patriarcale. Diplomato come perito elettrotecnico, dopo il servizio militare, si trasferisce a Torino per lavorare come macchinista presso le Ferrovie dello Stato, dove conosce Filomena. Si sposano a Napoli il 22 aprile 1976; il 28 aprile 1977 nasceva il primo figlio, Andrea; l'8 dicembre 1979 nasceva Alessio e nel 1991 nasceva Chiara.</p>
-<p>Nel febbraio 1983 è tornato a vivere a Roma con la famiglia, al Villaggio Prenestino, a pochi passi dalla parrocchia di Sant'Eligio, dove si sono subito inseriti come catechisti ed animatori di oratorio. Qualche tempo dopo, l'allora parroco Monsignor Rino Cunial gli propose il Diaconato permanente e, sotto la guida di Sua Eccellenza Monsignor Luca Brandolini, iniziò il percorso di formazione per il Diaconato, studiando teologia presso gli Istituti Ecclesia Mater e, per la specializzazione in Pastorale Sanitaria, presso il Camillianum.</p>
-<p>Il 20 novembre 1993, nella Patriarcale Arcibasilica di San Giovanni in Laterano, per l'imposizione delle mani di Sua Eminenza il Cardinale Camillo Ruini, riceveva la Grazia del Sacro Ordine del Diaconato. Ha prestato servizio presso la cappellania dell'Ospedale "Carlo Forlanini" fino al 2004, e nelle Liturgie del Santo Padre nella Basilica di San Pietro.</p>
-<p>Oggi offre il suo servizio nella Liturgia, nella guida dell'Adorazione Eucaristica serale, nella predicazione delle "10 Parole" e dei "7 Segni di Giovanni", nel corso di preparazione al matrimonio e nel corso di Pastorale Sanitaria.</p>
 `.trim(),
   },
   {
@@ -290,5 +221,77 @@ export const PAGINE_SEED: SeedPagina[] = [
     sezione: SezionePagina.PARROCCHIA,
     ordine: 4,
     contenuto: `<p>Il territorio parrocchiale è suddiviso in contrade. Di seguito le vie appartenenti a ciascuna contrada.</p>`.trim(),
+  },
+
+  // --- Nuove pagine della nuova architettura (contenuto da completare) ---
+  {
+    slug: 'la-nuova-chiesa',
+    titolo: 'La nuova Chiesa',
+    sezione: SezionePagina.ALTRO,
+    ordine: 10,
+    contenuto: `<p><em>Contenuto in aggiornamento.</em></p>`,
+  },
+  {
+    slug: 'spazi-mensa',
+    titolo: 'La mensa',
+    sezione: SezionePagina.ALTRO,
+    ordine: 11,
+    contenuto: `<p><em>Contenuto in aggiornamento.</em></p>`,
+  },
+  {
+    slug: 'spazi-patio',
+    titolo: 'Il Patio',
+    sezione: SezionePagina.ALTRO,
+    ordine: 12,
+    contenuto: `<p><em>Contenuto in aggiornamento.</em></p>`,
+  },
+  {
+    slug: 'spazi-calcetto',
+    titolo: 'Il campo di Calcetto',
+    sezione: SezionePagina.ALTRO,
+    ordine: 13,
+    contenuto: `<p><em>Contenuto in aggiornamento.</em></p>`,
+  },
+  {
+    slug: 'lavori-oratorio',
+    titolo: "L'oratorio",
+    sezione: SezionePagina.ALTRO,
+    ordine: 14,
+    contenuto: `<p><em>Contenuto in aggiornamento.</em></p>`,
+  },
+  {
+    slug: 'lavori-campo',
+    titolo: 'Il campo di Pallacanestro e Pallavolo',
+    sezione: SezionePagina.ALTRO,
+    ordine: 15,
+    contenuto: `<p><em>Contenuto in aggiornamento.</em></p>`,
+  },
+  {
+    slug: 'lavori-spogliatoi',
+    titolo: 'Gli Spogliatoi',
+    sezione: SezionePagina.ALTRO,
+    ordine: 16,
+    contenuto: `<p><em>Contenuto in aggiornamento.</em></p>`,
+  },
+  {
+    slug: 'grest',
+    titolo: 'Grest',
+    sezione: SezionePagina.ALTRO,
+    ordine: 17,
+    contenuto: `<p><em>Contenuto in aggiornamento.</em></p>`,
+  },
+  {
+    slug: 'giovani-gruppo-1',
+    titolo: 'Gruppo 1',
+    sezione: SezionePagina.ALTRO,
+    ordine: 18,
+    contenuto: `<p><em>Contenuto in aggiornamento.</em></p>`,
+  },
+  {
+    slug: 'giovani-gruppo-2',
+    titolo: 'Gruppo 2',
+    sezione: SezionePagina.ALTRO,
+    ordine: 19,
+    contenuto: `<p><em>Contenuto in aggiornamento.</em></p>`,
   },
 ];

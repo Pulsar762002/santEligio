@@ -17,6 +17,17 @@ export class Gruppo {
   @Prop({ type: String, enum: Object.values(AreaGruppo), required: true })
   area: AreaGruppo;
 
+  // Slug opzionale: se presente, il gruppo ha una pagina di dettaglio (/gruppi/:area/:slug).
+  @Prop({ maxlength: 120 })
+  slug: string;
+
+  // Contenuto HTML della pagina di dettaglio del gruppo (opzionale).
+  @Prop()
+  contenuto: string;
+
+  @Prop()
+  immagine: string;
+
   @Prop()
   descrizione: string;
 

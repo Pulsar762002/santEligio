@@ -4,6 +4,9 @@ export interface Gruppo {
   _id: string;
   nome: string;
   area: AreaGruppo;
+  slug?: string;
+  contenuto?: string;
+  immagine?: string;
   descrizione?: string;
   referente?: string;
   contatto?: string;

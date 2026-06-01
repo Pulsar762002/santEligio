@@ -27,16 +27,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/orari-messe/orari-messe.component').then(m => m.OrariMesseComponent),
   },
   {
-    path: 'parrocchia',
-    loadComponent: () => import('./pages/parrocchia/parrocchia.component').then(m => m.ParrocchiaComponent),
-  },
-  {
-    path: 'parrocchia/:sezione',
-    loadComponent: () => import('./pages/parrocchia/parrocchia.component').then(m => m.ParrocchiaComponent),
-  },
-  {
     path: 'gruppi',
     loadComponent: () => import('./pages/gruppi/gruppi.component').then(m => m.GruppiComponent),
+  },
+  {
+    path: 'gruppi/:area/:slug',
+    loadComponent: () => import('./pages/gruppi/gruppo-detail.component').then(m => m.GruppoDetailComponent),
   },
   {
     path: 'gruppi/:area',

@@ -31,7 +31,7 @@ const SEZIONE_LOGO: Record<string, string> = {
           <div class="notfound">
             <h1>Pagina non trovata</h1>
             <p class="empty">Il contenuto richiesto non è disponibile.</p>
-            <a routerLink="/parrocchia" class="btn btn-outline">Torna alla Parrocchia</a>
+            <a routerLink="/" class="btn btn-outline">Torna alla Home</a>
           </div>
         }
         @case ('ok') {
