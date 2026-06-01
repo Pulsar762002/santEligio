@@ -189,7 +189,9 @@ Il server deve avere già `.env` e `nginx/ssl/` configurati — il deploy fa sol
 | `/eventi` | `EventiComponent` |
 | `/orari-messe` | `OrariMesseComponent` — grouped by tipo (festiva / prefestiva / feriale) |
 | `/parrocchia` | `ParrocchiaComponent` — hub: pagine statiche raggruppate per sezione |
+| `/parrocchia/:sezione` | `ParrocchiaComponent` — pagine della singola sezione come card (navbar dropdown "La Parrocchia") |
 | `/gruppi` | `GruppiComponent` — gruppi e movimenti raggruppati per area |
+| `/gruppi/:area` | `GruppiComponent` — gruppi della singola area come card (navbar dropdown "Gruppi") |
 | `/galleria` | `GalleriaComponent` — foto/video per categoria; popup con sfondo sfocato (video YouTube/Vimeo via iframe o file via `<video>`) |
 | `/intenzioni-preghiera` | `IntenzioniPreghieraComponent` — form pubblico di invio intenzione |
 | `/p/stradario` | `StradarioComponent` — vie del territorio raggruppate per contrada (rotta dedicata, prima della generica) |

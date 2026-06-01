@@ -35,6 +35,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/gruppi/gruppi.component').then(m => m.GruppiComponent),
   },
   {
+    path: 'gruppi/:area',
+    loadComponent: () => import('./pages/gruppi/gruppi.component').then(m => m.GruppiComponent),
+  },
+  {
     path: 'galleria',
     loadComponent: () => import('./pages/galleria/galleria.component').then(m => m.GalleriaComponent),
   },

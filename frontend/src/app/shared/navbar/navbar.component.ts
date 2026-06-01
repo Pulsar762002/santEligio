@@ -3,7 +3,9 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../core/services/auth.service';
 import { PagineService } from '../../core/services/pagine.service';
+import { GruppiService } from '../../core/services/gruppi.service';
 import { SezionePagina, SEZIONE_LABELS } from '../../core/models/pagina.model';
+import { AreaGruppo, AREA_LABELS } from '../../core/models/gruppo.model';
 
 @Component({
   selector: 'app-navbar',
@@ -36,7 +38,17 @@ import { SezionePagina, SEZIONE_LABELS } from '../../core/models/pagina.model';
           <li><a routerLink="/notizie" routerLinkActive="active">Notizie</a></li>
           <li><a routerLink="/eventi" routerLinkActive="active">Eventi</a></li>
           <li><a routerLink="/orari-messe" routerLinkActive="active">Orari Messe</a></li>
-          <li><a routerLink="/gruppi" routerLinkActive="active">Gruppi</a></li>
+          <li class="has-dropdown">
+            <a routerLink="/gruppi" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Gruppi <span class="caret" aria-hidden="true">▾</span></a>
+            @if (menuGruppi().length > 0) {
+              <div class="dropdown">
+                @for (item of menuGruppi(); track item.area) {
+                  <a [routerLink]="['/gruppi', item.area]" routerLinkActive="active"
+                     [routerLinkActiveOptions]="{ exact: true }">{{ labelArea(item.area) }}</a>
+                }
+              </div>
+            }
+          </li>
           <li><a routerLink="/galleria" routerLinkActive="active">Galleria</a></li>
           <li><a routerLink="/intenzioni-preghiera" routerLinkActive="active">Intenzioni</a></li>
           <li><a routerLink="/p/contatti" routerLinkActive="active">Contatti</a></li>
@@ -177,8 +189,10 @@ export class NavbarComponent {
   protected auth = inject(AuthService);
   private router = inject(Router);
   private pagineService = inject(PagineService);
+  private gruppiService = inject(GruppiService);
 
   private readonly pagine = toSignal(this.pagineService.getAll(), { initialValue: [] });
+  private readonly gruppi = toSignal(this.gruppiService.getAll(), { initialValue: [] });
 
   // Sottomenu "La Parrocchia": elenco delle sole sezioni che hanno pagine.
   // Cliccando una sezione si apre la vista a card (/parrocchia/:sezione).
@@ -196,8 +210,22 @@ export class NavbarComponent {
       }));
   });
 
+  // Sottomenu "Gruppi": elenco delle sole aree che hanno gruppi.
+  // Cliccando un'area si apre la vista a card (/gruppi/:area).
+  readonly menuGruppi = computed(() => {
+    const order: AreaGruppo[] = ['liturgia', 'catechesi', 'carita'];
+    const presenti = new Set(this.gruppi().map(g => g.area));
+    return order
+      .filter(area => presenti.has(area))
+      .map(area => ({ area }));
+  });
+
   label(sezione: SezionePagina): string {
     return SEZIONE_LABELS[sezione];
+  }
+
+  labelArea(area: AreaGruppo): string {
+    return AREA_LABELS[area];
   }
 
   logout(): void {

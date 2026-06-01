@@ -1,7 +1,11 @@
 import { Component, computed, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs/operators';
 import { GruppiService } from '../../core/services/gruppi.service';
 import { AreaGruppo, AREA_LABELS } from '../../core/models/gruppo.model';
+
+const AREE: AreaGruppo[] = ['liturgia', 'catechesi', 'carita'];
 
 @Component({
   selector: 'app-gruppi',
@@ -9,7 +13,7 @@ import { AreaGruppo, AREA_LABELS } from '../../core/models/gruppo.model';
   template: `
     <section class="hero-sm">
       <div class="container">
-        <h1>Gruppi e Movimenti</h1>
+        <h1>{{ area() ? label(area()!) : 'Gruppi e Movimenti' }}</h1>
         <p>Le realtà che animano la vita della comunità parrocchiale.</p>
       </div>
     </section>
@@ -17,7 +21,7 @@ import { AreaGruppo, AREA_LABELS } from '../../core/models/gruppo.model';
     <div class="container page-content">
       @for (gruppo of aree(); track gruppo.area) {
         <section class="area">
-          <h2>{{ label(gruppo.area) }}</h2>
+          @if (!area()) { <h2>{{ label(gruppo.area) }}</h2> }
           <div class="card-grid">
             @for (g of gruppo.gruppi; track g._id) {
               <article class="card gruppo-card">
@@ -58,11 +62,23 @@ import { AreaGruppo, AREA_LABELS } from '../../core/models/gruppo.model';
 })
 export class GruppiComponent {
   private service = inject(GruppiService);
+  private route = inject(ActivatedRoute);
 
   private readonly gruppi = toSignal(this.service.getAll(), { initialValue: [] });
 
+  // Area selezionata via /gruppi/:area; null su /gruppi (mostra tutte le aree).
+  readonly area = toSignal(
+    this.route.paramMap.pipe(
+      map(p => {
+        const a = p.get('area') as AreaGruppo | null;
+        return a && AREE.includes(a) ? a : null;
+      }),
+    ),
+    { initialValue: null as AreaGruppo | null },
+  );
+
   readonly aree = computed(() => {
-    const order: AreaGruppo[] = ['liturgia', 'catechesi', 'carita'];
+    const order = this.area() ? [this.area()!] : AREE;
     return order
       .map(area => ({
         area,
