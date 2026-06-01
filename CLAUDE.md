@@ -186,7 +186,8 @@ Il server deve avere già `.env` e `nginx/ssl/` configurati — il deploy fa sol
 | `/` | `HomeComponent` — hero + latest 3 news + upcoming 3 events |
 | `/notizie` | `NewsListComponent` — filterable by categoria |
 | `/notizie/:id` | `NewsDetailComponent` |
-| `/eventi` | `EventiComponent` |
+| `/eventi` | `EventiComponent` — card eventi cliccabili (passati e futuri) |
+| `/eventi/:id` | `EventDetailComponent` — dettaglio singolo evento |
 | `/orari-messe` | `OrariMesseComponent` — grouped by tipo (festiva / prefestiva / feriale) |
 | `/parrocchia` | `ParrocchiaComponent` — hub: pagine statiche raggruppate per sezione |
 | `/parrocchia/:sezione` | `ParrocchiaComponent` — pagine della singola sezione come card (navbar dropdown "La Parrocchia") |

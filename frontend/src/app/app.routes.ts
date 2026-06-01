@@ -19,6 +19,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/eventi/eventi.component').then(m => m.EventiComponent),
   },
   {
+    path: 'eventi/:id',
+    loadComponent: () => import('./pages/eventi/event-detail/event-detail.component').then(m => m.EventDetailComponent),
+  },
+  {
     path: 'orari-messe',
     loadComponent: () => import('./pages/orari-messe/orari-messe.component').then(m => m.OrariMesseComponent),
   },
