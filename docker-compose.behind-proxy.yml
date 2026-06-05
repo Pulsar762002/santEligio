@@ -1,0 +1,98 @@
+# ─────────────────────────────────────────────────────────────
+# Deployment DIETRO un Nginx host che fa già da reverse proxy /
+# termina il TLS (es. server con Foundry + altri servizi su 80/443).
+#
+# Differenze rispetto a docker-compose.yml (standalone):
+#   • l'Nginx interno NON bind­a 80/443 ma solo 127.0.0.1:8090
+#   • niente servizio certbot (i certificati li gestisce l'host)
+#   • vhost in HTTP puro (nginx/conf.d-proxied)
+#
+# Uso sul server:
+#   docker compose -f docker-compose.behind-proxy.yml up --build -d
+# ─────────────────────────────────────────────────────────────
+services:
+
+  # ── NGINX interno: static frontend + proxy /api + /uploads ──
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: santeligio_nginx
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:8090:80'        # raggiungibile solo dall'Nginx host
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d-proxied:/etc/nginx/conf.d:ro
+      - frontend_build:/usr/share/nginx/html:ro
+      - uploads_data:/usr/share/nginx/uploads:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - santeligio_net
+
+  # ── FRONTEND — Angular (build stage) ──
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: build
+    container_name: santeligio_frontend
+    volumes:
+      - frontend_build:/app/dist/frontend/browser
+    networks:
+      - santeligio_net
+
+  # ── BACKEND — NestJS API ──
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: santeligio_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      MONGO_URI: mongodb://santeligio_app:${MONGO_APP_PASSWORD:?err}@mongo:27017/${MONGO_DB_NAME:-santeligio}
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - santeligio_net
+
+  # ── MONGODB ──
+  mongo:
+    image: mongo:7.0
+    container_name: santeligio_mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?err}
+      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME:-santeligio}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?err}
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - santeligio_net
+
+volumes:
+  mongo_data:
+    driver: local
+  uploads_data:
+    driver: local
+  frontend_build:
+    driver: local
+
+networks:
+  santeligio_net:
+    driver: bridge
