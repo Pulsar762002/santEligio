@@ -8,7 +8,12 @@ import { TipoMessa } from '../../core/models/orario-messa.model';
   standalone: true,
   template: `
     <div class="container page-content">
-      <h1>Orari delle Messe</h1>
+      <div class="page-header">
+        <h1>Orari delle Messe</h1>
+        <a class="btn-pdf" href="/uploads/orari-messe-estive.pdf" target="_blank" download>
+          ⬇ Scarica orari estivi (PDF)
+        </a>
+      </div>
 
       @for (gruppo of gruppi(); track gruppo.tipo) {
         <section class="gruppo">
@@ -42,6 +47,16 @@ import { TipoMessa } from '../../core/models/orario-messa.model';
     </div>
   `,
   styles: [`
+    .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+    .page-header h1 { margin: 0; }
+    .btn-pdf {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .55rem 1.1rem; border-radius: var(--radius);
+      background: var(--color-primary); color: white;
+      font-size: .9rem; font-weight: 600; text-decoration: none;
+      transition: background .15s;
+    }
+    .btn-pdf:hover { background: var(--color-primary-dark); text-decoration: none; }
     .gruppo { margin-bottom: 2.5rem; }
     .orari-table {
       width: 100%;

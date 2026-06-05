@@ -15,8 +15,15 @@ export class EventiService {
   }
 
   findProssimi(limit = 5) {
+    const now = new Date();
     return this.eventoModel
-      .find({ pubblicato: true, dataInizio: { $gte: new Date() } })
+      .find({
+        pubblicato: true,
+        $or: [
+          { dataFine: { $gte: now } },
+          { dataFine: { $exists: false }, dataInizio: { $gte: now } },
+        ],
+      })
       .sort({ dataInizio: 1 })
       .limit(limit);
   }

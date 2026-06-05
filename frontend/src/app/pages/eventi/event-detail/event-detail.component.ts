@@ -35,7 +35,7 @@ import { assetUrl } from '../../../core/utils/asset-url';
           </div>
 
           @if (evento()!.descrizione) {
-            <div class="article-body">{{ evento()!.descrizione }}</div>
+            <div class="article-body" [innerHTML]="evento()!.descrizione"></div>
           }
         </article>
       } @else {
@@ -51,7 +51,10 @@ import { assetUrl } from '../../../core/utils/asset-url';
     .meta-item { display: inline-flex; align-items: center; gap: .4rem; color: var(--color-text-muted); }
     .meta-item .when:first-letter { text-transform: capitalize; }
     .range { color: var(--color-text-muted); }
-    .article-body { line-height: 1.8; margin-top: 1rem; white-space: pre-line; }
+    .article-body { line-height: 1.8; margin-top: 1rem; }
+    .article-body h3 { margin: 1.25rem 0 .5rem; font-size: 1.05rem; }
+    .article-body ul { padding-left: 1.25rem; margin: .25rem 0 .75rem; }
+    .article-body li { margin-bottom: .25rem; }
   `],
 })
 export class EventDetailComponent {
