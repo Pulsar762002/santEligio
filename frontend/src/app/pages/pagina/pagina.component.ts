@@ -124,6 +124,16 @@ const SEZIONE_LOGO: Record<string, string> = {
     }
     .prosa ::ng-deep li { margin-bottom: .35rem; }
     .prosa ::ng-deep strong { color: var(--color-primary-dark); }
+    .prosa ::ng-deep .avviso {
+      background: #fdecea;
+      border: 1px solid #f5c6c2;
+      border-radius: 14px;
+      padding: 1.1rem 1.4rem;
+      margin: 1.75rem 0;
+    }
+    .prosa ::ng-deep .avviso p { margin: 0 0 .6rem; }
+    .prosa ::ng-deep .avviso ul:last-child { margin-bottom: 0; }
+    .prosa ::ng-deep .avviso strong { color: #c0392b; }
     .notfound { text-align: center; padding: 3rem 0; }
     .notfound a { margin-top: 1rem; }
   `],
