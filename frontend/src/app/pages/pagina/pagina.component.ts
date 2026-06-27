@@ -134,6 +134,60 @@ const SEZIONE_LOGO: Record<string, string> = {
     .prosa ::ng-deep .avviso p { margin: 0 0 .6rem; }
     .prosa ::ng-deep .avviso ul:last-child { margin-bottom: 0; }
     .prosa ::ng-deep .avviso strong { color: #c0392b; }
+    /* ── tabella commissioni pastorali ── */
+    .prosa ::ng-deep .table-responsive {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border-radius: var(--radius);
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    }
+    .prosa ::ng-deep .pastoral-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.93rem;
+    }
+    .prosa ::ng-deep .pastoral-table thead th {
+      background: var(--color-primary);
+      color: white;
+      padding: .7rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+    .prosa ::ng-deep .pastoral-table tbody td {
+      padding: .55rem 1rem;
+      border-bottom: 1px solid var(--color-border);
+      vertical-align: middle;
+    }
+    .prosa ::ng-deep .pastoral-table td[rowspan] {
+      text-align: center;
+      vertical-align: middle;
+      font-size: 1rem;
+      border-right: 2px solid rgba(0,0,0,.08);
+      min-width: 90px;
+    }
+    .prosa ::ng-deep .pastoral-table tbody tr:hover td { filter: brightness(.96); }
+    .prosa ::ng-deep .pastoral-table tr.liturgia td  { background: #eef4fb; }
+    .prosa ::ng-deep .pastoral-table tr.carita td    { background: #fdf3eb; }
+    .prosa ::ng-deep .pastoral-table tr.catechesi td { background: #eef8f0; }
+    /* ── citazione statuto ── */
+    .prosa ::ng-deep blockquote.statute-quote {
+      border-left: 4px solid var(--color-secondary);
+      background: var(--color-bg-alt);
+      margin: 1.5rem 0;
+      padding: 1rem 1.25rem;
+      font-style: italic;
+      color: var(--color-text-muted);
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+    .prosa ::ng-deep .statute-reference {
+      font-size: .88rem;
+      color: var(--color-text-muted);
+      border-top: 1px solid var(--color-border);
+      padding-top: .75rem;
+      margin-top: 1.5rem;
+    }
     .notfound { text-align: center; padding: 3rem 0; }
     .notfound a { margin-top: 1rem; }
   `],
