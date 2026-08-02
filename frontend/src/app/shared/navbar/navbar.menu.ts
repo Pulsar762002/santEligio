@@ -76,6 +76,7 @@ export const MENU: MenuEntry[] = [
           { label: "Catechismo per l'Iniziazione Cristiana", link: '/p/catechismo-iniziazione-cristiana' },
           { label: 'Sacramento della Cresima', link: '/p/corso-precresima' },
           { label: 'Sacramento del Matrimonio', link: '/p/corso-prematrimoniale' },
+          { label: 'Magnifica Umanitas', link: '/p/magnifica-umanitas' },
         ],
       },
       {

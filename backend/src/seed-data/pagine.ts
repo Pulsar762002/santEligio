@@ -184,6 +184,13 @@ export const PAGINE_SEED: SeedPagina[] = [
     contenuto: SACR_MATRIMONIO,
   },
   {
+    slug: 'magnifica-umanitas',
+    titolo: 'Magnifica Umanitas',
+    sezione: SezionePagina.SACRAMENTI,
+    ordine: 5,
+    contenuto: `<p>Contenuto in preparazione.</p>`,
+  },
+  {
     slug: 'contatti',
     titolo: 'Contatti',
     sezione: SezionePagina.ALTRO,

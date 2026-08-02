@@ -45,13 +45,14 @@ import { assetUrl } from '../../../core/utils/asset-url';
   `,
   styles: [`
     .back { display: inline-block; margin-bottom: 1.5rem; color: var(--color-text-muted); font-size: .9rem; }
-    .article-img { width: 100%; max-height: 400px; object-fit: cover; border-radius: var(--radius); margin-bottom: 1.5rem; }
+    .article-img { width: 100%; aspect-ratio: 8 / 5; object-fit: cover; border-radius: var(--radius); margin-bottom: 1.5rem; }
     .article h1 { margin-bottom: .75rem; }
     .event-meta { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin-bottom: 1.25rem; }
     .meta-item { display: inline-flex; align-items: center; gap: .4rem; color: var(--color-text-muted); }
     .meta-item .when:first-letter { text-transform: capitalize; }
     .range { color: var(--color-text-muted); }
     .article-body { line-height: 1.8; margin-top: 1rem; }
+    .article-body img { display: block; width: 100%; height: auto; margin: 1.25rem auto; border-radius: var(--radius); }
     .article-body h3 { margin: 1.25rem 0 .5rem; font-size: 1.05rem; }
     .article-body ul { padding-left: 1.25rem; margin: .25rem 0 .75rem; }
     .article-body li { margin-bottom: .25rem; }
