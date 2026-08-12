@@ -98,5 +98,14 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     loadComponent: () => import('./pages/admin/galleria/admin-galleria.component').then(m => m.AdminGalleriaComponent),
   },
+  {
+    path: 'admin/calendario',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./pages/admin/calendario/admin-calendario.component').then(m => m.AdminCalendarioComponent),
+  },
+  {
+    path: 'calendario',
+    loadComponent: () => import('./pages/calendario/calendario.component').then(m => m.CalendarioComponent),
+  },
   { path: '**', redirectTo: '' },
 ];

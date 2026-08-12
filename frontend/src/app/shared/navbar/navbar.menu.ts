@@ -149,6 +149,7 @@ export const MENU: MenuEntry[] = [
   },
 
   { label: 'Orari Messe', link: '/orari-messe' },
+  { label: 'Calendario', link: '/calendario' },
   { label: 'Galleria', link: '/galleria' },
   { label: 'Contatti', link: '/p/contatti' },
 ];
