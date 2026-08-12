@@ -1,4 +1,4 @@
-.PHONY: help dev prod stop logs shell-backend shell-mongo clean cert reload-nginx
+.PHONY: help dev prod deploy deploy-frontend stop logs shell-backend shell-mongo clean cert reload-nginx
 
 help: ## Mostra questo aiuto
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -14,6 +14,31 @@ dev-bg: ## Avvia in background (sviluppo)
 # ── Produzione ────────────────────────────────────────────────
 prod: ## Build e avvio in produzione
 	docker compose -f docker-compose.yml up --build -d
+
+deploy: ## Deploy completo dietro Nginx host (frontend+backend --no-cache + seed contenuti)
+	@echo "==> Build frontend e backend (no cache)..."
+	docker compose -f docker-compose.behind-proxy.yml build --no-cache frontend backend
+	@echo "==> Stop containers e rimozione volume build..."
+	docker compose -f docker-compose.behind-proxy.yml down
+	docker volume rm -f santeligio_frontend_build
+	@echo "==> Avvio stack..."
+	docker compose -f docker-compose.behind-proxy.yml up -d
+	@echo "==> Attesa backend pronto..."
+	@sleep 5
+	@echo "==> Seed contenuti (pagine/gruppi/orari)..."
+	docker exec santeligio_backend npm run seed:contenuti
+	@echo "==> Deploy completato."
+
+deploy-frontend: ## Rebuild solo il frontend (no cache) senza toccare backend/DB
+	@echo "==> Build frontend (no cache)..."
+	docker compose -f docker-compose.behind-proxy.yml build --no-cache frontend
+	@echo "==> Stop e rimozione container frontend e nginx..."
+	docker compose -f docker-compose.behind-proxy.yml stop frontend nginx
+	docker compose -f docker-compose.behind-proxy.yml rm -f frontend nginx
+	docker volume rm -f santeligio_frontend_build
+	@echo "==> Avvio frontend e nginx..."
+	docker compose -f docker-compose.behind-proxy.yml up -d frontend nginx
+	@echo "==> Deploy frontend completato."
 
 prod-pull: ## Aggiorna immagini e riavvia in produzione
 	docker compose -f docker-compose.yml pull
