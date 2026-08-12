@@ -36,7 +36,7 @@ function tipoLabel(m: Media): string {
         </div>
         <label class="btn btn-primary upload-btn">
           {{ uploading() ? 'Caricamento…' : '+ Carica file' }}
-          <input type="file" accept="image/png,image/jpeg,image/webp,application/pdf"
+          <input type="file" accept="image/png,image/jpeg,image/webp,application/pdf,video/mp4,video/webm,video/ogg,video/quicktime"
                  (change)="carica($event)" [disabled]="uploading()" hidden />
         </label>
       </div>
@@ -57,8 +57,8 @@ function tipoLabel(m: Media): string {
         <button class="link danger" (click)="elimina(m)">Elimina</button>
       </ng-template>
 
-      <p class="hint">PNG, JPG, WebP o PDF — max 10 MB. I file caricati qui sono
-        riutilizzabili (l'URL può essere incollato nei contenuti).</p>
+      <p class="hint">PNG, JPG, WebP, PDF o video MP4/WebM — max {{ maxSizeMb }} MB. I file caricati qui sono
+        riutilizzabili (l'URL può essere incollato nei contenuti, es. nella Galleria).</p>
     </div>
   `,
   styles: [`
@@ -82,6 +82,7 @@ export class AdminMediaComponent {
   readonly uploading = signal(false);
   readonly error = signal('');
   readonly info = signal('');
+  readonly maxSizeMb = 150;
 
   src = assetUrl;
   private dp = new DatePipe('it');
