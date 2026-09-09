@@ -37,8 +37,14 @@ services:
       dockerfile: Dockerfile
       target: build
     container_name: santeligio_frontend
+    # Il volume va montato altrove (non su /app/dist/.../browser, dove `ng build`
+    # scrive): un named volume non vuoto maschera il contenuto dell'immagine allo
+    # start, quindi copiamo esplicitamente ad ogni avvio per pubblicare la build fresca.
+    command: >
+      sh -c "rm -rf /out/* /out/.[!.]* 2>/dev/null;
+             cp -a /app/dist/frontend/browser/. /out/"
     volumes:
-      - frontend_build:/app/dist/frontend/browser
+      - frontend_build:/out
     networks:
       - santeligio_net
 
