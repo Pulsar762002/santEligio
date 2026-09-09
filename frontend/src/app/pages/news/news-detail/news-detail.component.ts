@@ -34,10 +34,11 @@ import { NewsService } from '../../../core/services/news.service';
   `,
   styles: [`
     .back { display: inline-block; margin-bottom: 1.5rem; color: var(--color-text-muted); font-size: .9rem; }
-    .article-img { width: 100%; max-height: 400px; object-fit: cover; border-radius: var(--radius); margin-bottom: 1.5rem; }
+    .article-img { width: 100%; aspect-ratio: 8 / 5; object-fit: cover; border-radius: var(--radius); margin-bottom: 1.5rem; }
     .article-meta { display: flex; align-items: center; gap: .75rem; margin-bottom: .75rem; }
     time { font-size: .85rem; color: var(--color-text-muted); }
     .article-body { line-height: 1.8; margin-top: 1.5rem; }
+    .article-body img { display: block; width: 100%; height: auto; margin: 1.25rem auto; border-radius: var(--radius); }
   `],
 })
 export class NewsDetailComponent {
