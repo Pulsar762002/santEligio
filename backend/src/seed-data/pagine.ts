@@ -184,6 +184,13 @@ export const PAGINE_SEED: SeedPagina[] = [
     contenuto: SACR_MATRIMONIO,
   },
   {
+    slug: 'magnifica-umanitas',
+    titolo: 'Magnifica Umanitas',
+    sezione: SezionePagina.SACRAMENTI,
+    ordine: 5,
+    contenuto: `<p>Contenuto in preparazione.</p>`,
+  },
+  {
     slug: 'contatti',
     titolo: 'Contatti',
     sezione: SezionePagina.ALTRO,
@@ -198,6 +205,18 @@ export const PAGINE_SEED: SeedPagina[] = [
   <li>Codice fiscale: 80175070582</li>
   <li>Partita IVA (dell'ex scuola): 07343301003</li>
 </ul>
+<div class="avviso">
+  <p><strong>Avviso:</strong> Dal 22 Giugno al 6 Settembre compreso</p>
+  <ul>
+    <li>La segreteria parrocchiale seguirà i seguenti orari:
+      <ul>
+        <li>Dal lunedì al venerdì: 16:30 - 18:30</li>
+        <li>Sabato e Domenica: chiusa</li>
+      </ul>
+    </li>
+    <li>Per emergenze chiamare il numero: 373-6260472</li>
+  </ul>
+</div>
 `.trim(),
   },
   {
