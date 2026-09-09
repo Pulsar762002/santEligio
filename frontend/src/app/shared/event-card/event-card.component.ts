@@ -36,7 +36,7 @@ import { assetUrl } from '../../core/utils/asset-url';
         </div>
 
         @if (showDescription && evento.descrizione) {
-          <p class="desc">{{ evento.descrizione }}</p>
+          <p class="desc">{{ plainText(evento.descrizione) }}</p>
         }
       </div>
     </a>
@@ -107,6 +107,11 @@ export class EventCardComponent {
   @Input() showDescription = true;
 
   src = assetUrl;
+
+  plainText(html: string): string {
+    const text = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    return text.length > 150 ? text.slice(0, 150) + '…' : text;
+  }
 
   // Stesso giorno → solo orario di fine; giorni diversi → data + orario.
   rangeFormat(): string {

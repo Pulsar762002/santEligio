@@ -14,11 +14,28 @@ export class EventiService {
     return this.eventoModel.find(filter).sort({ dataInizio: 1 });
   }
 
-  findProssimi(limit = 5) {
-    return this.eventoModel
-      .find({ pubblicato: true, dataInizio: { $gte: new Date() } })
-      .sort({ dataInizio: 1 })
-      .limit(limit);
+  async findProssimi(limit = 5, mesiFinestra = 2) {
+    const now = new Date();
+    const cutoff = new Date(now);
+    cutoff.setMonth(cutoff.getMonth() + mesiFinestra);
+
+    const filtroBase = {
+      pubblicato: true,
+      $or: [
+        { dataFine: { $gte: now } },
+        { dataFine: { $exists: false }, dataInizio: { $gte: now } },
+      ],
+    };
+
+    const entroFinestra = await this.eventoModel
+      .find({ ...filtroBase, dataInizio: { $lte: cutoff } })
+      .sort({ dataInizio: 1 });
+
+    if (entroFinestra.length >= limit) {
+      return entroFinestra;
+    }
+
+    return this.eventoModel.find(filtroBase).sort({ dataInizio: 1 }).limit(limit);
   }
 
   async findOne(id: string) {

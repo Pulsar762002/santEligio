@@ -42,23 +42,48 @@ describe('EventiService', () => {
   });
 
   describe('findProssimi', () => {
-    it('filters future published events and applies the limit', () => {
-      const limit = jest.fn();
-      const sort = jest.fn().mockReturnValue({ limit });
-      model.find.mockReturnValue({ sort });
-      service.findProssimi(3);
+    it('returns all events within the next 2 months when there are at least `limit` of them', async () => {
+      const finestra = [{ _id: '1' }, { _id: '2' }, { _id: '3' }, { _id: '4' }];
+      const sortFinestra = jest.fn().mockResolvedValue(finestra);
+      model.find.mockReturnValueOnce({ sort: sortFinestra });
+
+      const result = await service.findProssimi(3);
 
       const filter = model.find.mock.calls[0][0];
       expect(filter.pubblicato).toBe(true);
-      expect(filter.dataInizio.$gte).toBeInstanceOf(Date);
-      expect(sort).toHaveBeenCalledWith({ dataInizio: 1 });
+      expect(filter.dataInizio.$lte).toBeInstanceOf(Date);
+      expect(sortFinestra).toHaveBeenCalledWith({ dataInizio: 1 });
+      expect(model.find).toHaveBeenCalledTimes(1);
+      expect(result).toBe(finestra);
+    });
+
+    it('falls back to the top `limit` events (beyond the window) when fewer than `limit` are within the next 2 months', async () => {
+      const finestra = [{ _id: '1' }];
+      const sortFinestra = jest.fn().mockResolvedValue(finestra);
+      model.find.mockReturnValueOnce({ sort: sortFinestra });
+
+      const limit = jest.fn();
+      const sortFallback = jest.fn().mockReturnValue({ limit });
+      model.find.mockReturnValueOnce({ sort: sortFallback });
+
+      await service.findProssimi(3);
+
+      expect(model.find).toHaveBeenCalledTimes(2);
+      const fallbackFilter = model.find.mock.calls[1][0];
+      expect(fallbackFilter.pubblicato).toBe(true);
+      expect(fallbackFilter.dataInizio).toBeUndefined();
+      expect(sortFallback).toHaveBeenCalledWith({ dataInizio: 1 });
       expect(limit).toHaveBeenCalledWith(3);
     });
 
-    it('defaults the limit to 5', () => {
+    it('defaults the limit to 5', async () => {
+      const sortFinestra = jest.fn().mockResolvedValue([]);
+      model.find.mockReturnValueOnce({ sort: sortFinestra });
       const limit = jest.fn();
-      model.find.mockReturnValue({ sort: jest.fn().mockReturnValue({ limit }) });
-      service.findProssimi();
+      model.find.mockReturnValueOnce({ sort: jest.fn().mockReturnValue({ limit }) });
+
+      await service.findProssimi();
+
       expect(limit).toHaveBeenCalledWith(5);
     });
   });
