@@ -27,4 +27,8 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+.claude/
 *.swp
+
+# Upload runtime (volume uploads_data, non versionato)
+backend/uploads/
