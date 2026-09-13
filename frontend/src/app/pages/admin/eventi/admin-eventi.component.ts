@@ -258,7 +258,7 @@ export class AdminEventiComponent {
       dataInizio: localInputToIso(this.form.dataInizio),
       dataFine: this.form.dataFine ? localInputToIso(this.form.dataFine) : undefined,
       luogo: this.form.luogo.trim() || undefined,
-      immagine: this.form.immagine || undefined,
+      immagine: this.form.immagine,
       pubblicato: this.form.pubblicato,
     };
 
