@@ -23,14 +23,19 @@ describe('OrariMesseController', () => {
   });
 
   describe('findAll', () => {
-    it('passes through the tipo filter', () => {
+    it('passes through the tipo filter and defaults to soloAttivi=true', () => {
       controller.findAll(TipoMessa.PREFESTIVA);
-      expect(service.findAll).toHaveBeenCalledWith(TipoMessa.PREFESTIVA);
+      expect(service.findAll).toHaveBeenCalledWith(TipoMessa.PREFESTIVA, true);
     });
 
     it('passes undefined when no tipo is given', () => {
       controller.findAll(undefined);
-      expect(service.findAll).toHaveBeenCalledWith(undefined);
+      expect(service.findAll).toHaveBeenCalledWith(undefined, true);
+    });
+
+    it('passes soloAttivi=false when tutti=true', () => {
+      controller.findAll(undefined, 'true');
+      expect(service.findAll).toHaveBeenCalledWith(undefined, false);
     });
   });
 
