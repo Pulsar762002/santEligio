@@ -59,7 +59,7 @@ npm run seed:contenuti  # runs node dist/seed-contenuti → carica pagine/gruppi
 ```
 
 Mongoose collection names are pinned explicitly via `@Schema({ collection: ... })`
-(`utenti`, `eventi`, `orari_messe`, `news`, `pagine`, `gruppi`, `intenzioni_preghiera`) so they match the validators and indexes
+(`utenti`, `eventi`, `orari_messe`, `news`, `pagine`, `gruppi`, `intenzioni_preghiera`, `calendario_attivita`) so they match the validators and indexes
 declared in `mongo-init/01-init.js`. Do not rely on Mongoose's default pluralization.
 
 ## Local dev URLs
@@ -99,7 +99,8 @@ Database: `santeligio`. The init script (`mongo-init/01-init.js`) creates:
 - Collections with schema validation: `news`, `eventi`
 - Plain collections: `orari_messe`, `sacramenti`, `gruppi`, `pagine`, `media`, `utenti`
 - Plain collection: `intenzioni_preghiera`
-- Indexes: `news.createdAt`, `news.{categoria,pubblicato}`, `eventi.dataInizio`, `utenti.email` (unique), `pagine.slug` (unique), `pagine.{sezione,ordine}`, `gruppi.{area,ordine}`, `intenzioni_preghiera.createdAt`
+- Plain collection: `calendario_attivita` — calendario mensile delle attività (messe/eventi generati + record manuali)
+- Indexes: `news.createdAt`, `news.{categoria,pubblicato}`, `eventi.dataInizio`, `utenti.email` (unique), `pagine.slug` (unique), `pagine.{sezione,ordine}`, `gruppi.{area,ordine}`, `intenzioni_preghiera.createdAt`, `calendario_attivita.data`, `calendario_attivita.{fonte,fonteRifId}`
 
 The `news` collection uses `categoria` enum: `liturgia | catechismo | caritas | eventi | comunicati`.
 
@@ -119,10 +120,13 @@ All routes are prefixed with `/api`. GET endpoints are public; write operations 
 | `pagine` | `GET /api/pagine[?sezione=&tutte=true]`, `GET /api/pagine/:slug`, `POST/PATCH/DELETE` (JWT) — contenuti statici |
 | `gruppi` | `GET /api/gruppi[?area=liturgia\|catechesi\|carita&tutti=true]`, `GET /api/gruppi/:id`, `POST/PATCH/DELETE` (JWT) |
 | `intenzioni-preghiera` | `POST /api/intenzioni-preghiera` (**pubblico**), `GET`, `PATCH /:id` (segna `letta`), `DELETE /:id` (JWT) |
+| `calendario-attivita` | `GET /api/calendario-attivita[?anno=&mese=&tutti=true]` (default mese corrente), `GET /api/calendario-attivita/:id`, `POST/PATCH/DELETE` (JWT) — voci manuali; `POST /api/calendario-attivita/genera[?anno=&mese=]` (JWT) — genera additivamente le voci mancanti dalle messe ricorrenti (`orari_messe`) e dagli eventi pubblicati del mese, senza mai sovrascrivere/cancellare voci esistenti. Reso da `/calendario` (pubblico) e `/admin/calendario` |
 
 `CategoriaNews` enum: `liturgia \| catechismo \| caritas \| eventi \| comunicati`
 
 `SezionePagina` enum: `parrocchia \| parroco \| diacono \| caritas \| consultorio \| organismi \| sacramenti \| gruppi \| altro`. `AreaGruppo` enum: `liturgia \| catechesi \| carita`.
+
+`TipoAttivita` enum (calendario): `messa \| evento \| catechesi \| carita \| liturgia \| altro`. `FonteAttivita` enum: `messa \| evento \| manuale` — impostata solo dal server, mai dal DTO client.
 
 I contenuti del vecchio sito (`old/`) sono estratti in `src/seed-data/` (`pagine.ts`, `gruppi.ts`, `orari-messe.ts`, `stradario.ts`) e caricati con `npm run seed:contenuti` (idempotente, upsert su slug/nome/ordine/via). Vedi `old/ANALISI.md`.
 
@@ -195,10 +199,12 @@ Il server deve avere già `.env` e `nginx/ssl/` configurati — il deploy fa sol
 | `/gruppi/:area` | `GruppiComponent` — gruppi della singola area come card (navbar dropdown "Gruppi") |
 | `/galleria` | `GalleriaComponent` — foto/video per categoria; popup con sfondo sfocato (video YouTube/Vimeo via iframe o file via `<video>`) |
 | `/intenzioni-preghiera` | `IntenzioniPreghieraComponent` — form pubblico di invio intenzione |
+| `/calendario` | `CalendarioComponent` — calendario mensile delle attività, agenda raggruppata per giorno, navigazione mese |
 | `/p/stradario` | `StradarioComponent` — vie del territorio raggruppate per contrada (rotta dedicata, prima della generica) |
 | `/p/:slug` | `PaginaComponent` — render generico di una pagina statica (HTML via `[innerHTML]`) |
 | `/admin/login` | `AdminLoginComponent` |
 | `/admin` | `AdminDashboardComponent` — protected by `authGuard` |
+| `/admin/calendario` | `AdminCalendarioComponent` — genera/gestisce il calendario mensile delle attività (protected) |
 
 ## Backend conventions (NestJS)
 
@@ -213,5 +219,5 @@ Il server deve avere già `.env` e `nginx/ssl/` configurati — il deploy fa sol
 
 - Jest (`*.spec.ts` next to the file under test); run with `npm test`. Requires `@types/jest` (in devDependencies).
 - Unit/smoke tests only — Mongoose models and other deps are mocked (`getModelToken`, `useValue`), so **no MongoDB is needed** and the suite runs in seconds. The CI `backend` job runs it on every push/PR.
-- Covered: `auth`, `news`, `eventi`, `orari-messe` (services + controllers). `media` upload is left uncovered (pure Multer config).
+- Covered: `auth`, `news`, `eventi`, `orari-messe`, `calendario-attivita` (services + controllers). `media` upload is left uncovered (pure Multer config).
 - Pattern: build the testing module with `Test.createTestingModule`, inject mocked collaborators, assert the query filter/sort passed to the model and that `NotFoundException` is thrown on missing ids.

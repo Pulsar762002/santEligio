@@ -61,6 +61,8 @@ server {
     listen 80;
     server_name parrocchiasanteligio.it www.parrocchiasanteligio.it;
 
+    client_max_body_size 170M;
+
     location / {
         proxy_pass http://127.0.0.1:8090;
         proxy_http_version 1.1;
@@ -76,6 +78,12 @@ server {
 sudo ln -s /etc/nginx/sites-available/parrocchiasanteligio /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 ```
+
+> **Upload video**: `client_max_body_size` default di Nginx è 1M — senza questa
+> direttiva qualsiasi video mp4 caricato dalla pagina Media verrebbe rifiutato
+> con 413 già a questo livello, prima di raggiungere lo stack interno (che
+> accetta fino a `UPLOAD_MAX_SIZE_MB`, vedi `.env`). Certbot preserva le righe
+> esistenti quando converte il vhost al passo 4, quindi va aggiunta una sola volta.
 
 ## 4. Certificato Let's Encrypt (plugin nginx)
 
@@ -98,6 +106,8 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/parrocchiasanteligio.it/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    client_max_body_size 170M;
 
     location / {
         proxy_pass http://127.0.0.1:8090;
