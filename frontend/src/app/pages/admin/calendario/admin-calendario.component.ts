@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { CalendarioAttivitaService } from '../../../core/services/calendario-attivita.service';
 import {
   CalendarioAttivita, TipoAttivita, TIPI_ATTIVITA, TIPO_ATTIVITA_LABEL, FONTE_ATTIVITA_LABEL,
+  ColoreAttivita, COLORI_ATTIVITA, COLORE_ATTIVITA_LABEL, COLORE_ATTIVITA_HEX,
 } from '../../../core/models/calendario-attivita.model';
 import { DataTableComponent, ColumnDef } from '../../../shared/data-table/data-table.component';
 
@@ -16,10 +17,16 @@ interface AttivitaForm {
   luogo: string;
   note: string;
   pubblicato: boolean;
+  colore: ColoreAttivita;
+  grassetto: boolean;
+  corsivo: boolean;
 }
 
 function emptyForm(): AttivitaForm {
-  return { data: '', ora: '', titolo: '', tipo: 'altro', luogo: '', note: '', pubblicato: true };
+  return {
+    data: '', ora: '', titolo: '', tipo: 'altro', luogo: '', note: '', pubblicato: true,
+    colore: 'nero', grassetto: false, corsivo: false,
+  };
 }
 
 @Component({
@@ -102,6 +109,39 @@ function emptyForm(): AttivitaForm {
             <textarea id="note" name="note" rows="3" [(ngModel)]="form.note"></textarea>
           </div>
 
+          <div class="row">
+            <div class="form-group">
+              <label for="colore">Colore testo</label>
+              <div class="colore-field">
+                <span class="colore-swatch" [style.background]="coloreHex(form.colore)"></span>
+                <select id="colore" name="colore" [(ngModel)]="form.colore">
+                  @for (c of colori; track c) {
+                    <option [value]="c">{{ coloreLabel(c) }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Stile</label>
+              <div class="stile-checks">
+                <label class="check">
+                  <input type="checkbox" name="grassetto" [(ngModel)]="form.grassetto" />
+                  Grassetto
+                </label>
+                <label class="check">
+                  <input type="checkbox" name="corsivo" [(ngModel)]="form.corsivo" />
+                  Corsivo
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <p class="anteprima" [style.color]="coloreHex(form.colore)"
+             [style.font-weight]="form.grassetto ? 'bold' : 'normal'"
+             [style.font-style]="form.corsivo ? 'italic' : 'normal'">
+            Anteprima: {{ form.titolo || 'Titolo attività' }}
+          </p>
+
           <label class="check">
             <input type="checkbox" name="pubblicato" [(ngModel)]="form.pubblicato" />
             Pubblicato (visibile sul sito)
@@ -144,6 +184,14 @@ function emptyForm(): AttivitaForm {
     textarea { resize: vertical; }
     .check { display: flex; align-items: center; gap: .5rem; margin: .5rem 0 1.25rem; font-size: .95rem; }
     .check input { width: auto; }
+    .colore-field { display: flex; align-items: center; gap: .5rem; }
+    .colore-swatch {
+      width: 1.4rem; height: 1.4rem; border-radius: 50%; flex-shrink: 0;
+      border: 1px solid var(--color-border);
+    }
+    .stile-checks { display: flex; gap: 1.25rem; margin-top: .4rem; }
+    .stile-checks .check { margin: 0; }
+    .anteprima { font-size: .95rem; margin: -.5rem 0 1.25rem; }
     .form-actions { display: flex; gap: .75rem; }
     .link { background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 0 .4rem; font-size: .85rem; }
     .link:hover { text-decoration: underline; }
@@ -177,6 +225,7 @@ export class AdminCalendarioComponent {
 
   form: AttivitaForm = emptyForm();
   tipi = TIPI_ATTIVITA;
+  colori = COLORI_ATTIVITA;
   private dp = new DatePipe('it');
 
   readonly columns: ColumnDef<CalendarioAttivita>[] = [
@@ -203,6 +252,14 @@ export class AdminCalendarioComponent {
 
   fonteLabel(f: string): string {
     return FONTE_ATTIVITA_LABEL[f as keyof typeof FONTE_ATTIVITA_LABEL] ?? f;
+  }
+
+  coloreLabel(c: ColoreAttivita): string {
+    return COLORE_ATTIVITA_LABEL[c] ?? c;
+  }
+
+  coloreHex(c: ColoreAttivita): string {
+    return COLORE_ATTIVITA_HEX[c] ?? COLORE_ATTIVITA_HEX['nero'];
   }
 
   private ricarica(): void {
@@ -266,6 +323,9 @@ export class AdminCalendarioComponent {
       luogo: v.luogo ?? '',
       note: v.note ?? '',
       pubblicato: v.pubblicato,
+      colore: v.colore ?? 'nero',
+      grassetto: v.grassetto ?? false,
+      corsivo: v.corsivo ?? false,
     };
     this.editId.set(v._id);
     this.editFonte.set(v.fonte);
@@ -307,6 +367,9 @@ export class AdminCalendarioComponent {
       luogo: this.form.luogo.trim() || undefined,
       note: this.form.note.trim() || undefined,
       pubblicato: this.form.pubblicato,
+      colore: this.form.colore,
+      grassetto: this.form.grassetto,
+      corsivo: this.form.corsivo,
     };
 
     this.saving.set(true);

@@ -18,7 +18,7 @@ frontend/.angular/
 .docker-volumes/
 
 # Dati certbot (certificati e challenge)
-data/
+/data/
 
 # OS
 .DS_Store

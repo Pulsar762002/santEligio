@@ -18,6 +18,15 @@ export enum FonteAttivita {
   MANUALE = 'manuale',
 }
 
+export enum ColoreAttivita {
+  NERO = 'nero',
+  ROSSO = 'rosso',
+  BLU = 'blu',
+  VERDE = 'verde',
+  ARANCIONE = 'arancione',
+  VIOLA = 'viola',
+}
+
 @Schema({ timestamps: true, collection: 'calendario_attivita' })
 export class CalendarioAttivita {
   @Prop({ required: true })
@@ -46,6 +55,15 @@ export class CalendarioAttivita {
 
   @Prop({ default: true })
   pubblicato: boolean;
+
+  @Prop({ type: String, enum: Object.values(ColoreAttivita), default: ColoreAttivita.NERO })
+  colore: ColoreAttivita;
+
+  @Prop({ default: false })
+  grassetto: boolean;
+
+  @Prop({ default: false })
+  corsivo: boolean;
 }
 
 export const CalendarioAttivitaSchema = SchemaFactory.createForClass(CalendarioAttivita);

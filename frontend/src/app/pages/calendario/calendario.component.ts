@@ -1,12 +1,10 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { CalendarioAttivitaService } from '../../core/services/calendario-attivita.service';
-import { CalendarioAttivita, TipoAttivita, TIPO_ATTIVITA_LABEL } from '../../core/models/calendario-attivita.model';
-
-interface GiornoAgenda {
-  data: string;
-  voci: CalendarioAttivita[];
-}
+import { CalendarioPdfService, GiornoAgenda } from '../../core/services/calendario-pdf.service';
+import {
+  CalendarioAttivita, TipoAttivita, TIPO_ATTIVITA_LABEL, ColoreAttivita, COLORE_ATTIVITA_HEX,
+} from '../../core/models/calendario-attivita.model';
 
 @Component({
   selector: 'app-calendario',
@@ -21,6 +19,9 @@ interface GiornoAgenda {
           <span class="month-label">{{ meseLabel() }}</span>
           <button class="nav-btn" (click)="meseAvanti()" aria-label="Mese successivo">&rarr;</button>
         </div>
+        <button class="btn-pdf" (click)="scaricaPdf()" [disabled]="loading()">
+          ⬇ Scarica PDF del mese
+        </button>
       </div>
 
       @if (loading()) {
@@ -36,7 +37,10 @@ interface GiornoAgenda {
                 <li class="voce">
                   <span class="ora">{{ v.ora }}</span>
                   <span class="dettagli">
-                    <span class="titolo">{{ titoloTipo(v.tipo) }}: {{ v.titolo }}</span>
+                    <span class="titolo"
+                          [style.color]="coloreHex(v.colore)"
+                          [style.font-weight]="v.grassetto ? 'bold' : null"
+                          [style.font-style]="v.corsivo ? 'italic' : null">{{ titoloTipo(v.tipo) }}: {{ v.titolo }}</span>
                     @if (v.luogo) { <span class="luogo">{{ v.luogo }}</span> }
                     @if (v.note) { <span class="note">{{ v.note }}</span> }
                   </span>
@@ -59,6 +63,14 @@ interface GiornoAgenda {
       font-size: 1rem; line-height: 1; color: var(--color-primary);
     }
     .nav-btn:hover { background: var(--color-bg-alt); }
+    .btn-pdf {
+      padding: .55rem 1.1rem; border-radius: var(--radius); border: none;
+      background: var(--color-primary); color: white;
+      font-size: .9rem; font-weight: 600; cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-pdf:hover:not(:disabled) { background: var(--color-primary-dark); }
+    .btn-pdf:disabled { opacity: .6; cursor: default; }
     .empty { color: var(--color-text-muted); font-style: italic; }
     .giorno { margin-bottom: 2rem; }
     .giorno h2 {
@@ -79,6 +91,7 @@ interface GiornoAgenda {
 })
 export class CalendarioComponent {
   private service = inject(CalendarioAttivitaService);
+  private pdfService = inject(CalendarioPdfService);
   private dp = new DatePipe('it');
 
   private readonly oggiData = new Date();
@@ -136,5 +149,13 @@ export class CalendarioComponent {
 
   titoloTipo(t: TipoAttivita): string {
     return TIPO_ATTIVITA_LABEL[t] ?? t;
+  }
+
+  coloreHex(c?: ColoreAttivita): string {
+    return COLORE_ATTIVITA_HEX[c ?? 'nero'];
+  }
+
+  scaricaPdf(): void {
+    this.pdfService.genera(this.anno(), this.mese(), this.giorni());
   }
 }

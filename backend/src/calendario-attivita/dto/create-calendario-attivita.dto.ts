@@ -1,5 +1,5 @@
 import { IsString, IsOptional, IsBoolean, IsDateString, IsEnum, MaxLength } from 'class-validator';
-import { TipoAttivita } from '../schemas/calendario-attivita.schema';
+import { TipoAttivita, ColoreAttivita } from '../schemas/calendario-attivita.schema';
 
 export class CreateCalendarioAttivitaDto {
   @IsDateString()
@@ -27,4 +27,16 @@ export class CreateCalendarioAttivitaDto {
   @IsOptional()
   @IsBoolean()
   pubblicato?: boolean;
+
+  @IsOptional()
+  @IsEnum(ColoreAttivita)
+  colore?: ColoreAttivita;
+
+  @IsOptional()
+  @IsBoolean()
+  grassetto?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  corsivo?: boolean;
 }
