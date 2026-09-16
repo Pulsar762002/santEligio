@@ -2,6 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { OrariMesseService } from '../../core/services/orari-messe.service';
 import { TipoMessa } from '../../core/models/orario-messa.model';
+import { assetUrl } from '../../core/utils/asset-url';
 
 @Component({
   selector: 'app-orari-messe',
@@ -10,7 +11,7 @@ import { TipoMessa } from '../../core/models/orario-messa.model';
     <div class="container page-content">
       <div class="page-header">
         <h1>Orari delle Messe</h1>
-        <a class="btn-pdf" href="/uploads/orari-messe-estive.pdf" target="_blank" download>
+        <a class="btn-pdf" [href]="orariEstiviUrl" target="_blank" download>
           ⬇ Scarica orari estivi (PDF)
         </a>
       </div>
@@ -88,6 +89,8 @@ import { TipoMessa } from '../../core/models/orario-messa.model';
 
 export class OrariMesseComponent {
   private orariService = inject(OrariMesseService);
+
+  readonly orariEstiviUrl = assetUrl('/uploads/orari-messe-estive.pdf');
 
   private readonly orari = toSignal(this.orariService.getAll(), { initialValue: [] });
 

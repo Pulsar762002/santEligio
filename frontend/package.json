@@ -19,11 +19,17 @@
     "@angular/platform-browser": "^17.0.0",
     "@angular/platform-browser-dynamic": "^17.0.0",
     "@angular/router": "^17.0.0",
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "typescript": "~5.2.0",
     "zone.js": "~0.14.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.6.9"
   }
 }

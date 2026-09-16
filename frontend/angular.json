@@ -45,6 +45,15 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "capacitor": {
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.capacitor.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
