@@ -210,6 +210,41 @@ import { MENU } from './navbar.menu';
       transform: translateX(0);
     }
 
+    /* Sotto i ~768px non c'è hover (touch): dropdown e flyout diventano
+       pannelli in-flow a tutta larghezza invece di overlay posizionati in
+       assoluto, che sugli schermi stretti finivano fuori dallo schermo. */
+    @media (max-width: 768px) {
+      .dropdown, .flyout {
+        position: static;
+        display: none;
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        background: rgba(0, 0, 0, .15);
+        transform: none;
+      }
+      .has-dropdown:hover > .dropdown,
+      .has-dropdown:focus-within > .dropdown,
+      .dropdown-sub:hover > .flyout,
+      .dropdown-sub:focus-within > .flyout {
+        display: flex;
+      }
+      .flyout { padding-left: 1.25rem; }
+      .dropdown a, .dropdown .sub-trigger {
+        color: rgba(255, 255, 255, .9);
+        white-space: normal;
+      }
+      .dropdown a:hover, .dropdown .sub-trigger:hover {
+        background: rgba(255, 255, 255, .12);
+        color: white;
+      }
+      .dropdown a.active { color: white; font-weight: 700; }
+      .caret-r { margin-left: .5rem; }
+    }
+
     .btn-logout {
       background: none;
       border: 1px solid rgba(255,255,255,.45);

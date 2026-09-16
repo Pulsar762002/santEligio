@@ -1,4 +1,7 @@
 import { Injectable, inject } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { CalendarioAttivita, COLORE_ATTIVITA_HEX } from '../models/calendario-attivita.model';
@@ -39,7 +42,7 @@ export class CalendarioPdfService {
     });
   }
 
-  private costruisci(anno: number, mese: number, giorni: GiornoAgenda[], orari: OrarioMessa[]): void {
+  private async costruisci(anno: number, mese: number, giorni: GiornoAgenda[], orari: OrarioMessa[]): Promise<void> {
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
     const marginX = 40;
@@ -153,7 +156,30 @@ export class CalendarioPdfService {
       this.disegnaFooter(doc);
     }
 
-    doc.save(`calendario-${MESI[mese - 1].toLowerCase()}-${anno}.pdf`);
+    await this.salvaOCondividi(doc, `calendario-${MESI[mese - 1].toLowerCase()}-${anno}.pdf`);
+  }
+
+  private async salvaOCondividi(doc: jsPDF, nomeFile: string): Promise<void> {
+    if (!Capacitor.isNativePlatform()) {
+      // Browser: il download standard funziona senza problemi.
+      doc.save(nomeFile);
+      return;
+    }
+
+    // Nell'app (WebView) un <a download> su un blob: non avvia alcun
+    // download: si scrive il PDF nella cache dell'app e si apre il foglio
+    // di condivisione nativo, da cui l'utente può salvarlo o inviarlo.
+    const base64 = doc.output('datauristring').split(',')[1];
+    const { uri } = await Filesystem.writeFile({
+      path: nomeFile,
+      data: base64,
+      directory: Directory.Cache,
+    });
+    await Share.share({
+      title: nomeFile,
+      url: uri,
+      dialogTitle: 'Salva o condividi il calendario',
+    });
   }
 
   private disegnaFooter(doc: jsPDF): void {
