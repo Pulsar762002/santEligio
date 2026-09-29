@@ -13,6 +13,7 @@ import { PagineModule } from './pagine/pagine.module';
 import { GruppiModule } from './gruppi/gruppi.module';
 import { IntenzioniPreghieraModule } from './intenzioni-preghiera/intenzioni-preghiera.module';
 import { CalendarioAttivitaModule } from './calendario-attivita/calendario-attivita.module';
+import { CalendarioIntestazioniModule } from './calendario-intestazioni/calendario-intestazioni.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { CalendarioAttivitaModule } from './calendario-attivita/calendario-attiv
     GruppiModule,
     IntenzioniPreghieraModule,
     CalendarioAttivitaModule,
+    CalendarioIntestazioniModule,
   ],
 })
 export class AppModule {}

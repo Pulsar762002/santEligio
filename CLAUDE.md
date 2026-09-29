@@ -59,7 +59,7 @@ npm run seed:contenuti  # runs node dist/seed-contenuti → carica pagine/gruppi
 ```
 
 Mongoose collection names are pinned explicitly via `@Schema({ collection: ... })`
-(`utenti`, `eventi`, `orari_messe`, `news`, `pagine`, `gruppi`, `intenzioni_preghiera`, `calendario_attivita`) so they match the validators and indexes
+(`utenti`, `eventi`, `orari_messe`, `news`, `pagine`, `gruppi`, `intenzioni_preghiera`, `calendario_attivita`, `calendario_intestazioni`) so they match the validators and indexes
 declared in `mongo-init/01-init.js`. Do not rely on Mongoose's default pluralization.
 
 ## Local dev URLs
@@ -100,7 +100,8 @@ Database: `santeligio`. The init script (`mongo-init/01-init.js`) creates:
 - Plain collections: `orari_messe`, `sacramenti`, `gruppi`, `pagine`, `media`, `utenti`
 - Plain collection: `intenzioni_preghiera`
 - Plain collection: `calendario_attivita` — calendario mensile delle attività (messe/eventi generati + record manuali)
-- Indexes: `news.createdAt`, `news.{categoria,pubblicato}`, `eventi.dataInizio`, `utenti.email` (unique), `pagine.slug` (unique), `pagine.{sezione,ordine}`, `gruppi.{area,ordine}`, `intenzioni_preghiera.createdAt`, `calendario_attivita.data`, `calendario_attivita.{fonte,fonteRifId}`
+- Plain collection: `calendario_intestazioni` — titolo/descrizione per mese mostrati nel PDF del calendario (unique `{anno, mese}`)
+- Indexes: `news.createdAt`, `news.{categoria,pubblicato}`, `eventi.dataInizio`, `utenti.email` (unique), `pagine.slug` (unique), `pagine.{sezione,ordine}`, `gruppi.{area,ordine}`, `intenzioni_preghiera.createdAt`, `calendario_attivita.data`, `calendario_attivita.{fonte,fonteRifId}`, `calendario_intestazioni.{anno,mese}` (unique)
 
 The `news` collection uses `categoria` enum: `liturgia | catechismo | caritas | eventi | comunicati`.
 
@@ -121,6 +122,7 @@ All routes are prefixed with `/api`. GET endpoints are public; write operations 
 | `gruppi` | `GET /api/gruppi[?area=liturgia\|catechesi\|carita&tutti=true]`, `GET /api/gruppi/:id`, `POST/PATCH/DELETE` (JWT) |
 | `intenzioni-preghiera` | `POST /api/intenzioni-preghiera` (**pubblico**), `GET`, `PATCH /:id` (segna `letta`), `DELETE /:id` (JWT) |
 | `calendario-attivita` | `GET /api/calendario-attivita[?anno=&mese=&tutti=true]` (default mese corrente), `GET /api/calendario-attivita/:id`, `POST/PATCH/DELETE` (JWT) — voci manuali; `POST /api/calendario-attivita/genera[?anno=&mese=]` (JWT) — genera additivamente le voci mancanti dalle messe ricorrenti (`orari_messe`) e dagli eventi pubblicati del mese, senza mai sovrascrivere/cancellare voci esistenti. Reso da `/calendario` (pubblico) e `/admin/calendario` |
+| `calendario-intestazioni` | `GET /api/calendario-intestazioni[?anno=&mese=]` (pubblico, `null` se assente), `PUT /api/calendario-intestazioni?anno=&mese=` (JWT, body `{ titolo, descrizione }`, upsert; entrambi vuoti = rimozione) — intestazione del mese nel PDF del calendario, subito sotto la riga del mese; editabile in `/admin/calendario` |
 
 `CategoriaNews` enum: `liturgia \| catechismo \| caritas \| eventi \| comunicati`
 
@@ -219,7 +221,7 @@ Il server deve avere già `.env` e `nginx/ssl/` configurati — il deploy fa sol
 
 - Jest (`*.spec.ts` next to the file under test); run with `npm test`. Requires `@types/jest` (in devDependencies).
 - Unit/smoke tests only — Mongoose models and other deps are mocked (`getModelToken`, `useValue`), so **no MongoDB is needed** and the suite runs in seconds. The CI `backend` job runs it on every push/PR.
-- Covered: `auth`, `news`, `eventi`, `orari-messe`, `calendario-attivita` (services + controllers). `media` upload is left uncovered (pure Multer config).
+- Covered: `auth`, `news`, `eventi`, `orari-messe`, `calendario-attivita`, `calendario-intestazioni` (services + controllers). `media` upload is left uncovered (pure Multer config).
 - Pattern: build the testing module with `Test.createTestingModule`, inject mocked collaborators, assert the query filter/sort passed to the model and that `NotFoundException` is thrown on missing ids.
 
 ## Mobile app (Capacitor)

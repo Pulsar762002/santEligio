@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { forkJoin, of, catchError } from 'rxjs';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
@@ -7,6 +8,8 @@ import autoTable from 'jspdf-autotable';
 import { CalendarioAttivita, COLORE_ATTIVITA_HEX } from '../models/calendario-attivita.model';
 import { OrarioMessa } from '../models/orario-messa.model';
 import { OrariMesseService } from './orari-messe.service';
+import { CalendarioIntestazione } from '../models/calendario-intestazione.model';
+import { CalendarioIntestazioniService } from './calendario-intestazioni.service';
 import { SANTI_DEL_GIORNO } from '../data/santi-del-giorno.data';
 import { SOCIAL_ICONE } from '../data/social-icone.data';
 import { FESTIVI_FISSI } from '../data/festivi-fissi.data';
@@ -30,19 +33,31 @@ const MESI = [
 
 const COLONNA0_LARGHEZZA = 140;
 const CELL_PADDING = 6;
+const INTESTAZIONE_TITOLO_FONT = 11.5;
+const INTESTAZIONE_TITOLO_INTERLINEA = 14;
+const INTESTAZIONE_DESCR_FONT = 9.5;
+const INTESTAZIONE_DESCR_INTERLINEA = 11.5;
+const INTESTAZIONE_GAP = 4;
 
 @Injectable({ providedIn: 'root' })
 export class CalendarioPdfService {
   private readonly orariService = inject(OrariMesseService);
+  private readonly intestazioniService = inject(CalendarioIntestazioniService);
 
   genera(anno: number, mese: number, giorni: GiornoAgenda[]): void {
-    this.orariService.getAll().subscribe({
-      next: orari => this.costruisci(anno, mese, giorni, orari),
-      error: () => this.costruisci(anno, mese, giorni, []),
-    });
+    forkJoin({
+      orari: this.orariService.getAll().pipe(catchError(() => of([] as OrarioMessa[]))),
+      intestazione: this.intestazioniService.get(anno, mese).pipe(catchError(() => of(null))),
+    }).subscribe(({ orari, intestazione }) => this.costruisci(anno, mese, giorni, orari, intestazione));
   }
 
-  private async costruisci(anno: number, mese: number, giorni: GiornoAgenda[], orari: OrarioMessa[]): Promise<void> {
+  private async costruisci(
+    anno: number,
+    mese: number,
+    giorni: GiornoAgenda[],
+    orari: OrarioMessa[],
+    intestazione: CalendarioIntestazione | null,
+  ): Promise<void> {
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
     const marginX = 40;
@@ -88,7 +103,19 @@ export class CalendarioPdfService {
 
     const colonna1Larghezza = pageWidth - marginX * 2 - COLONNA0_LARGHEZZA - CELL_PADDING * 2;
     const righeAttivita = giorniFiltrati.map(g => this.costruisciRigheVoci(g.voci, colonna1Larghezza, doc));
-    const body = giorniFiltrati.map((g, i) => [righe[i].giorno, '']);
+    const body: (string | { content: string; colSpan: number })[][] = giorniFiltrati.map((g, i) => [righe[i].giorno, '']);
+
+    // Intestazione del mese (titolo + descrizione) come prima riga del corpo, a tutta larghezza:
+    // sta subito sotto la riga del mese e, a differenza dell'head, non si ripete sulle pagine successive.
+    const larghezzaIntestazione = pageWidth - marginX * 2 - CELL_PADDING * 2;
+    const intestazioneTitolo = intestazione?.titolo?.trim()
+      ? this.righeTesto(doc, intestazione.titolo.trim(), 'bold', INTESTAZIONE_TITOLO_FONT, larghezzaIntestazione)
+      : [];
+    const intestazioneDescr = intestazione?.descrizione?.trim()
+      ? this.righeTesto(doc, intestazione.descrizione.trim(), 'normal', INTESTAZIONE_DESCR_FONT, larghezzaIntestazione)
+      : [];
+    const offset = intestazioneTitolo.length || intestazioneDescr.length ? 1 : 0;
+    if (offset) body.unshift([{ content: '', colSpan: 2 }]);
 
     autoTable(doc, {
       startY: y,
@@ -101,8 +128,18 @@ export class CalendarioPdfService {
       columnStyles: { 0: { cellWidth: COLONNA0_LARGHEZZA, fontStyle: 'bold' }, 1: { cellWidth: 'auto' } },
       didParseCell: data => {
         if (data.section !== 'body') return;
+        if (data.row.index < offset) {
+          data.cell.text = [];
+          const gap = intestazioneTitolo.length && intestazioneDescr.length ? INTESTAZIONE_GAP : 0;
+          data.cell.styles.minCellHeight = CELL_PADDING * 2 + 4
+            + intestazioneTitolo.length * INTESTAZIONE_TITOLO_INTERLINEA
+            + gap
+            + intestazioneDescr.length * INTESTAZIONE_DESCR_INTERLINEA;
+          return;
+        }
+        const idx = data.row.index - offset;
         if (data.column.index === 0) {
-          const santo = righe[data.row.index]?.santo;
+          const santo = righe[idx]?.santo;
           if (santo) {
             data.cell.text = [];
             const larghezza = COLONNA0_LARGHEZZA - CELL_PADDING * 2;
@@ -111,14 +148,39 @@ export class CalendarioPdfService {
           }
         } else if (data.column.index === 1) {
           data.cell.text = [];
-          const numeroRighe = righeAttivita[data.row.index]?.length ?? 1;
+          const numeroRighe = righeAttivita[idx]?.length ?? 1;
           data.cell.styles.minCellHeight = CELL_PADDING * 2 + numeroRighe * 11;
         }
       },
       didDrawCell: data => {
         if (data.section !== 'body') return;
+        if (data.row.index < offset) {
+          const cx = data.cell.x + data.cell.width / 2;
+          let ty = data.cell.y + data.cell.padding('top') + 9;
+          doc.setTextColor(0, 0, 0);
+          if (intestazioneTitolo.length) {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(INTESTAZIONE_TITOLO_FONT);
+            for (const r of intestazioneTitolo) {
+              doc.text(r, cx, ty, { align: 'center' });
+              ty += INTESTAZIONE_TITOLO_INTERLINEA;
+            }
+            if (intestazioneDescr.length) ty += INTESTAZIONE_GAP;
+          }
+          if (intestazioneDescr.length) {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(INTESTAZIONE_DESCR_FONT);
+            doc.setTextColor(40, 40, 40);
+            for (const r of intestazioneDescr) {
+              doc.text(r, cx, ty, { align: 'center' });
+              ty += INTESTAZIONE_DESCR_INTERLINEA;
+            }
+          }
+          return;
+        }
+        const idx = data.row.index - offset;
         if (data.column.index === 0) {
-          const santo = righe[data.row.index]?.santo;
+          const santo = righe[idx]?.santo;
           if (santo) {
             const x = data.cell.x + data.cell.padding('left');
             const larghezza = data.cell.width - data.cell.padding('left') - data.cell.padding('right');
@@ -126,7 +188,7 @@ export class CalendarioPdfService {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(9.5);
             doc.setTextColor(20, 20, 20);
-            doc.text(righe[data.row.index].giorno, x, ty);
+            doc.text(righe[idx].giorno, x, ty);
             ty += 12;
             doc.setFont('helvetica', 'italic');
             doc.setFontSize(8.5);
@@ -137,7 +199,7 @@ export class CalendarioPdfService {
           const x = data.cell.x + data.cell.padding('left');
           let ty = data.cell.y + data.cell.padding('top') + 8;
           doc.setFontSize(9.5);
-          for (const riga of righeAttivita[data.row.index] ?? []) {
+          for (const riga of righeAttivita[idx] ?? []) {
             doc.setFont('helvetica', this.fontStyleDa(riga.grassetto, riga.corsivo));
             doc.setTextColor(...riga.colore);
             doc.text(riga.testo, x, ty);
@@ -152,7 +214,8 @@ export class CalendarioPdfService {
       doc.setFont('helvetica', 'italic');
       doc.setFontSize(10);
       doc.setTextColor(90);
-      doc.text('Nessuna attività in programma per questo mese.', pageWidth / 2, y + 30, { align: 'center' });
+      const fineTabella = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? y;
+      doc.text('Nessuna attività in programma per questo mese.', pageWidth / 2, fineTabella + 30, { align: 'center' });
       this.disegnaFooter(doc);
     }
 
@@ -274,6 +337,13 @@ export class CalendarioPdfService {
   private hexARgb(hex: string): [number, number, number] {
     const h = hex.replace('#', '');
     return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  }
+
+  /** Spezza il testo (rispettando gli a capo inseriti dall'admin) in righe che stanno nella larghezza data. */
+  private righeTesto(doc: jsPDF, testo: string, stile: 'bold' | 'normal', fontSize: number, larghezza: number): string[] {
+    doc.setFont('helvetica', stile);
+    doc.setFontSize(fontSize);
+    return doc.splitTextToSize(testo, larghezza) as string[];
   }
 
   private formattaOrariMesse(orari: OrarioMessa[]): string {

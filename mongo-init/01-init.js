@@ -54,6 +54,7 @@ db.createCollection('media');
 db.createCollection('utenti');
 db.createCollection('intenzioni_preghiera');
 db.createCollection('calendario_attivita');
+db.createCollection('calendario_intestazioni');
 
 // ── Indici ────────────────────────────────────────────────────
 db.news.createIndex({ createdAt: -1 });
@@ -66,5 +67,6 @@ db.gruppi.createIndex({ area: 1, ordine: 1 });
 db.intenzioni_preghiera.createIndex({ createdAt: -1 });
 db.calendario_attivita.createIndex({ data: 1 });
 db.calendario_attivita.createIndex({ fonte: 1, fonteRifId: 1 });
+db.calendario_intestazioni.createIndex({ anno: 1, mese: 1 }, { unique: true });
 
 print('✅  MongoDB inizializzato: DB santeligio, utente app, collezioni e indici creati.');

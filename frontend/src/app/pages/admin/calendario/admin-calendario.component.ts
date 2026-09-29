@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CalendarioAttivitaService } from '../../../core/services/calendario-attivita.service';
+import { CalendarioIntestazioniService } from '../../../core/services/calendario-intestazioni.service';
 import {
   CalendarioAttivita, TipoAttivita, TIPI_ATTIVITA, TIPO_ATTIVITA_LABEL, FONTE_ATTIVITA_LABEL,
   ColoreAttivita, COLORI_ATTIVITA, COLORE_ATTIVITA_LABEL, COLORE_ATTIVITA_HEX,
@@ -61,6 +62,29 @@ function emptyForm(): AttivitaForm {
           "Genera dal mese" aggiunge le voci mancanti dagli orari delle messe e dagli eventi pubblicati del mese
           (senza toccare quelle già presenti o modificate a mano). I festivi infrasettimanali vanno aggiunti manualmente.
         </p>
+
+        <form class="card intestazione" (ngSubmit)="salvaIntestazione()">
+          <h2>Intestazione del PDF — {{ meseLabel() }}</h2>
+          <p class="hint">
+            Titolo e descrizione compaiono nel PDF del mese subito sotto la riga del mese, prima delle attività.
+            Lasciali entrambi vuoti per non mostrare nessuna intestazione.
+          </p>
+          <div class="form-group">
+            <label for="int-titolo">Titolo</label>
+            <input id="int-titolo" name="intTitolo" [(ngModel)]="intestazione.titolo" maxlength="200" />
+          </div>
+          <div class="form-group">
+            <label for="int-descrizione">Descrizione</label>
+            <textarea id="int-descrizione" name="intDescrizione" rows="3" maxlength="2000"
+                      [(ngModel)]="intestazione.descrizione"></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="salvandoIntestazione()">
+              {{ salvandoIntestazione() ? 'Salvataggio…' : 'Salva intestazione' }}
+            </button>
+            @if (intestazioneMsg()) { <span class="int-msg">{{ intestazioneMsg() }}</span> }
+          </div>
+        </form>
       }
 
       @if (error()) { <div class="alert alert-error">{{ error() }}</div> }
@@ -192,7 +216,11 @@ function emptyForm(): AttivitaForm {
     .stile-checks { display: flex; gap: 1.25rem; margin-top: .4rem; }
     .stile-checks .check { margin: 0; }
     .anteprima { font-size: .95rem; margin: -.5rem 0 1.25rem; }
-    .form-actions { display: flex; gap: .75rem; }
+    .form-actions { display: flex; gap: .75rem; align-items: center; }
+    .intestazione { margin-bottom: 1.5rem; padding: 1.25rem 1.5rem; }
+    .intestazione h2 { margin: 0 0 .35rem; font-size: 1.05rem; text-transform: none; }
+    .intestazione .hint { margin-bottom: 1rem; }
+    .int-msg { font-size: .85rem; color: var(--color-text-muted); }
     .link { background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 0 .4rem; font-size: .85rem; }
     .link:hover { text-decoration: underline; }
     .link.danger { color: #b91c1c; }
@@ -205,6 +233,7 @@ function emptyForm(): AttivitaForm {
 })
 export class AdminCalendarioComponent {
   private service = inject(CalendarioAttivitaService);
+  private intestazioniService = inject(CalendarioIntestazioniService);
 
   readonly voci = signal<CalendarioAttivita[]>([]);
   readonly editId = signal<string | null>(null);
@@ -213,6 +242,8 @@ export class AdminCalendarioComponent {
   readonly saving = signal(false);
   readonly generando = signal(false);
   readonly error = signal('');
+  readonly salvandoIntestazione = signal(false);
+  readonly intestazioneMsg = signal('');
 
   private readonly oggiData = new Date();
   readonly anno = signal(this.oggiData.getFullYear());
@@ -224,6 +255,7 @@ export class AdminCalendarioComponent {
   });
 
   form: AttivitaForm = emptyForm();
+  intestazione = { titolo: '', descrizione: '' };
   tipi = TIPI_ATTIVITA;
   colori = COLORI_ATTIVITA;
   private dp = new DatePipe('it');
@@ -244,6 +276,7 @@ export class AdminCalendarioComponent {
 
   constructor() {
     this.ricarica();
+    this.caricaIntestazione();
   }
 
   tipoLabel(t: TipoAttivita): string {
@@ -269,6 +302,40 @@ export class AdminCalendarioComponent {
     });
   }
 
+  private caricaIntestazione(): void {
+    const anno = this.anno();
+    const mese = this.mese();
+    this.intestazione = { titolo: '', descrizione: '' };
+    this.intestazioneMsg.set('');
+    this.intestazioniService.get(anno, mese).subscribe({
+      next: i => {
+        // ignora risposte arrivate dopo un cambio mese
+        if (anno !== this.anno() || mese !== this.mese()) return;
+        this.intestazione = { titolo: i?.titolo ?? '', descrizione: i?.descrizione ?? '' };
+      },
+      error: () => this.intestazioneMsg.set("Impossibile caricare l'intestazione."),
+    });
+  }
+
+  salvaIntestazione(): void {
+    this.salvandoIntestazione.set(true);
+    this.intestazioneMsg.set('');
+    this.intestazioniService.salva(this.anno(), this.mese(), {
+      titolo: this.intestazione.titolo.trim(),
+      descrizione: this.intestazione.descrizione.trim(),
+    }).subscribe({
+      next: i => {
+        this.salvandoIntestazione.set(false);
+        this.intestazione = { titolo: i?.titolo ?? '', descrizione: i?.descrizione ?? '' };
+        this.intestazioneMsg.set(i ? 'Intestazione salvata.' : 'Intestazione rimossa.');
+      },
+      error: () => {
+        this.salvandoIntestazione.set(false);
+        this.intestazioneMsg.set('Salvataggio non riuscito.');
+      },
+    });
+  }
+
   meseFa(): void {
     this.spostaMese(-1);
   }
@@ -282,12 +349,14 @@ export class AdminCalendarioComponent {
     this.anno.set(d.getFullYear());
     this.mese.set(d.getMonth() + 1);
     this.ricarica();
+    this.caricaIntestazione();
   }
 
   oggi(): void {
     this.anno.set(this.oggiData.getFullYear());
     this.mese.set(this.oggiData.getMonth() + 1);
     this.ricarica();
+    this.caricaIntestazione();
   }
 
   genera(): void {
