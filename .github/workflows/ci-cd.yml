@@ -53,7 +53,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - name: SSH → git pull + docker compose up
+      - name: SSH → git pull + docker compose (behind-proxy) up
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -62,6 +62,10 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.DEPLOY_PATH }}
-            git pull origin main
-            docker compose -f docker-compose.yml up --build -d
+            git fetch origin main
+            git checkout main
+            git pull --ff-only origin main
+            # Il server ha già un Nginx host su 80/443 (condiviso con Foundry): usare SOLO lo stack
+            # dietro proxy (espone 127.0.0.1:8090). docker-compose.yml pubblicherebbe 80/443.
+            docker compose -f docker-compose.behind-proxy.yml up --build -d
             docker image prune -f

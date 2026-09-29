@@ -161,7 +161,7 @@ Pipeline in `.github/workflows/ci-cd.yml`:
 |---|---|---|
 | `backend` | ogni push / PR su `main` | `npm ci` → `npm run build` → `npm test` (68 smoke test) |
 | `frontend` | ogni push / PR su `main` | `npm ci` → `ng build --configuration production` |
-| `deploy` | push su `main` (dopo CI verde) | SSH nel server → `git pull` → `docker compose up --build -d` |
+| `deploy` | push su `main` (dopo CI verde) | SSH nel server → `git checkout main` + `git pull --ff-only` → `docker compose -f docker-compose.behind-proxy.yml up --build -d` (mai `docker-compose.yml`: pubblicherebbe 80/443, già occupate dall'Nginx host) |
 
 **Secrets GitHub da configurare** (Settings → Secrets → Actions):
 
