@@ -87,7 +87,7 @@ export class CalendarioPdfService {
     const orariLinea = this.formattaOrariMesse(orari);
     const orariWrapped = doc.splitTextToSize(orariLinea, pageWidth - marginX * 2) as string[];
     doc.text(orariWrapped, pageWidth / 2, y, { align: 'center' });
-    y += orariWrapped.length * 12 + 12;
+    y += orariWrapped.length * 12 + 2;
 
     const meseLabel = `${MESI[mese - 1].toUpperCase()} ${anno}`;
     const giorniFiltrati = giorni
@@ -120,6 +120,9 @@ export class CalendarioPdfService {
     autoTable(doc, {
       startY: y,
       margin: { left: marginX, right: marginX, bottom: 60 },
+      // Il contenuto delle celle è disegnato a mano in didDrawCell: una riga spezzata tra due pagine
+      // verrebbe comunque disegnata per intero e finirebbe sopra il piè di pagina. Meglio spostarla tutta.
+      rowPageBreak: 'avoid',
       head: [[{ content: meseLabel, colSpan: 2, styles: { halign: 'center' as const } }]],
       body,
       theme: 'grid',
