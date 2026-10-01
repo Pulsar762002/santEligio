@@ -52,8 +52,25 @@ describe('UsersService (gestione utenti)', () => {
     model.findById.mockResolvedValue(doc({ ruolo: 'admin', attivo: true, aree: [] }));
     model.countDocuments.mockResolvedValue(0);
     await expect(service.modifica(id, { ruolo: 'utente' }, 'altro')).rejects.toBeInstanceOf(BadRequestException);
-    expect(model.countDocuments).toHaveBeenCalledWith({ _id: { $ne: id }, ruolo: 'admin', attivo: true });
+    expect(model.countDocuments).toHaveBeenCalledWith({ _id: { $ne: id }, ruolo: 'admin', attivo: { $ne: false } });
     await expect(service.elimina(id, 'altro')).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('lists accounts created before roles with default name/areas/active', async () => {
+    model.find.mockReturnValue({ select: () => ({ sort: () => ({ lean: () => Promise.resolve([
+      { email: 'vecchio@x.it', ruolo: 'admin' },
+      { email: 'nuovo@x.it', ruolo: 'contributor', nome: 'N', aree: ['coro'], attivo: false },
+    ]) }) }) });
+    await expect(service.elenco()).resolves.toEqual([
+      { email: 'vecchio@x.it', ruolo: 'admin', nome: '', aree: [], attivo: true },
+      { email: 'nuovo@x.it', ruolo: 'contributor', nome: 'N', aree: ['coro'], attivo: false },
+    ]);
+  });
+
+  it('treats a missing "attivo" as active when protecting the last admin', async () => {
+    model.findById.mockResolvedValue(doc({ ruolo: 'admin', aree: undefined }));
+    model.countDocuments.mockResolvedValue(0);
+    await expect(service.modifica(id, { ruolo: 'utente' }, 'altro')).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('forbids demoting or deleting yourself', async () => {

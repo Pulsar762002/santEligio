@@ -11,6 +11,13 @@ import { AREE } from '../aree/aree.registry';
 
 const PUBBLICO = '-password';
 
+type UtenteLean = { nome?: string; aree?: string[]; attivo?: boolean } & Record<string, unknown>;
+
+/** Gli account creati prima dei ruoli non hanno nome/aree/attivo: valori di default. */
+function normalizza<T extends UtenteLean>(u: T) {
+  return { ...u, nome: u.nome ?? '', aree: u.aree ?? [], attivo: u.attivo !== false };
+}
+
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
@@ -35,12 +42,14 @@ export class UsersService {
 
   // ── Gestione utenti (solo admin) ──
 
-  elenco() {
-    return this.userModel.find().select(PUBBLICO).sort({ ruolo: 1, nome: 1, email: 1 }).lean();
+  async elenco() {
+    const utenti = await this.userModel.find().select(PUBBLICO).sort({ ruolo: 1, nome: 1, email: 1 }).lean();
+    return utenti.map((u) => normalizza(u as UtenteLean));
   }
 
   private async pubblico(id: string) {
-    return this.userModel.findById(id).select(PUBBLICO).lean();
+    const u = await this.userModel.findById(id).select(PUBBLICO).lean();
+    return u && normalizza(u as UtenteLean);
   }
 
   /** Aree coerenti col ruolo: admin/utente nessuna; il Grest non si assegna ai contributor. */
@@ -83,7 +92,7 @@ export class UsersService {
   /** Impedisce di restare senza nessun admin attivo. */
   private async verificaAltroAdmin(escludiId: string) {
     const altri = await this.userModel.countDocuments({
-      _id: { $ne: escludiId }, ruolo: 'admin', attivo: true,
+      _id: { $ne: escludiId }, ruolo: 'admin', attivo: { $ne: false },
     });
     if (altri === 0) throw new BadRequestException('Deve restare almeno un Admin attivo.');
   }
@@ -91,15 +100,15 @@ export class UsersService {
   async modifica(id: string, dto: ModificaUtenteDto, chiEsegue: string) {
     const u = await this.trova(id);
     const ruolo = dto.ruolo ?? u.ruolo;
-    const attivo = dto.attivo ?? u.attivo;
-    if (u.ruolo === 'admin' && u.attivo && (ruolo !== 'admin' || !attivo)) {
+    const attivo = dto.attivo ?? u.attivo !== false;
+    if (u.ruolo === 'admin' && u.attivo !== false && (ruolo !== 'admin' || !attivo)) {
       if (id === chiEsegue) throw new BadRequestException('Non puoi togliere a te stesso il ruolo di Admin.');
       await this.verificaAltroAdmin(id);
     }
     u.ruolo = ruolo;
     u.attivo = attivo;
     if (dto.nome !== undefined) u.nome = dto.nome.trim();
-    u.aree = this.normalizzaAree(ruolo, dto.aree ?? u.aree);
+    u.aree = this.normalizzaAree(ruolo, dto.aree ?? u.aree ?? []);
     await u.save();
     return this.pubblico(id);
   }
@@ -124,7 +133,7 @@ export class UsersService {
   async elimina(id: string, chiEsegue: string) {
     if (id === chiEsegue) throw new BadRequestException('Non puoi eliminare il tuo account.');
     const u = await this.trova(id);
-    if (u.ruolo === 'admin' && u.attivo) await this.verificaAltroAdmin(id);
+    if (u.ruolo === 'admin' && u.attivo !== false) await this.verificaAltroAdmin(id);
     await u.deleteOne();
     return { ok: true };
   }

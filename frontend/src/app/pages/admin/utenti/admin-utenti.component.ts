@@ -194,9 +194,9 @@ export class AdminUtentiComponent {
     { key: 'nome', label: 'Nome', value: (u) => u.nome || u.email },
     { key: 'email', label: 'Email', value: (u) => u.email },
     { key: 'ruolo', label: 'Ruolo', value: (u) => etichettaRuolo(u.ruolo) },
-    { key: 'aree', label: 'Aree', sortable: false, value: (u) => u.aree.map(this.nomeArea).join(', ') || '—' },
-    { key: 'attivo', label: 'Stato', type: 'badge', value: (u) => u.attivo,
-      badgeLabel: (u) => (u.attivo ? 'Attivo' : 'Disattivato'), badgeOn: (u) => u.attivo },
+    { key: 'aree', label: 'Aree', sortable: false, value: (u) => (u.aree ?? []).map(this.nomeArea).join(', ') || '—' },
+    { key: 'attivo', label: 'Stato', type: 'badge', value: (u) => u.attivo !== false,
+      badgeLabel: (u) => (u.attivo !== false ? 'Attivo' : 'Disattivato'), badgeOn: (u) => u.attivo !== false },
   ];
 
   constructor() {
@@ -234,7 +234,7 @@ export class AdminUtentiComponent {
   }
 
   modifica(u: Utente): void {
-    this.form = { email: u.email, nome: u.nome, ruolo: u.ruolo, aree: [...u.aree], password: '', attivo: u.attivo };
+    this.form = { email: u.email, nome: u.nome ?? '', ruolo: u.ruolo, aree: [...(u.aree ?? [])], password: '', attivo: u.attivo !== false };
     this.editId.set(u._id);
     this.editing.set(true);
     this.error.set('');
