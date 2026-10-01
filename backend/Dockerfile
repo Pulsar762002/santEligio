@@ -39,6 +39,8 @@ COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=build /app/dist ./dist
+# Template ODT dei moduli Grest (letti a runtime da process.cwd()/assets)
+COPY --from=build /app/assets ./assets
 
 # Utente non-root per sicurezza
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup

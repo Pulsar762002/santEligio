@@ -69,6 +69,19 @@ services:
     networks:
       - santeligio_net
 
+  # ── GOTENBERG — conversione ODT → PDF (LibreOffice) per i moduli Grest ──
+  # Solo rete interna: lo usa il backend su http://gotenberg:3000.
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: santeligio_gotenberg
+    restart: unless-stopped
+    command:
+      - gotenberg
+      - --api-timeout=60s
+      - --libreoffice-restart-after=50
+    networks:
+      - santeligio_net
+
   # ── MONGODB ──
   mongo:
     image: mongo:7.0

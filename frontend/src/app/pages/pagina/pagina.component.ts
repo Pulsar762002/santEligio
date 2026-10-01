@@ -5,6 +5,7 @@ import { map, switchMap, startWith, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { PagineService } from '../../core/services/pagine.service';
 import { Pagina } from '../../core/models/pagina.model';
+import { GrestCtaComponent } from '../grest/grest-cta.component';
 
 type Stato =
   | { status: 'loading' }
@@ -20,7 +21,7 @@ const SEZIONE_LOGO: Record<string, string> = {
 @Component({
   selector: 'app-pagina',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, GrestCtaComponent],
   template: `
     <div class="container page-content">
       @switch (state().status) {
@@ -54,6 +55,9 @@ const SEZIONE_LOGO: Record<string, string> = {
                    class="pagina-img" [class.banner]="imgLandscape()" (load)="onImgLoad($event)">
             }
             <div class="prosa" [innerHTML]="pagina()!.contenuto"></div>
+            @if (pagina()!.slug === 'grest') {
+              <app-grest-cta />
+            }
           </article>
         }
       }

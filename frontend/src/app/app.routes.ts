@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
+import { grestGuard } from './core/guards/grest.guard';
 
 export const routes: Routes = [
   {
@@ -106,6 +107,29 @@ export const routes: Routes = [
   {
     path: 'calendario',
     loadComponent: () => import('./pages/calendario/calendario.component').then(m => m.CalendarioComponent),
+  },
+  {
+    path: 'grest/accedi',
+    loadComponent: () => import('./pages/grest/grest-accedi.component').then(m => m.GrestAccediComponent),
+  },
+  {
+    path: 'grest/registrazione',
+    loadComponent: () => import('./pages/grest/grest-registrazione.component').then(m => m.GrestRegistrazioneComponent),
+  },
+  {
+    path: 'grest/attivazione',
+    loadComponent: () => import('./pages/grest/grest-attivazione.component').then(m => m.GrestAttivazioneComponent),
+  },
+  {
+    path: 'grest/area',
+    canActivate: [grestGuard],
+    loadComponent: () => import('./pages/grest/grest-area.component').then(m => m.GrestAreaComponent),
+  },
+  { path: 'grest', redirectTo: 'grest/accedi', pathMatch: 'full' },
+  {
+    path: 'admin/grest',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./pages/admin/grest/admin-grest.component').then(m => m.AdminGrestComponent),
   },
   { path: '**', redirectTo: '' },
 ];

@@ -109,6 +109,7 @@ export class AdminDashboardComponent {
     { label: 'Stradario', description: 'Gestisci le vie del territorio per contrada.', icon: 'S', route: '/admin/stradario', available: true },
     { label: 'Pagine', description: 'Crea e modifica le pagine di contenuto del sito.', icon: 'P', route: '/admin/pagine', available: true },
     { label: 'Galleria', description: 'Categorie, foto e video della galleria.', icon: 'G', route: '/admin/galleria', available: true },
+    { label: 'Grest', description: 'Iscritti, moduli PDF, export CSV e link password delle famiglie.', icon: 'R', route: '/admin/grest', available: true },
     { label: 'Calendario Attività', description: 'Genera e gestisci il calendario mensile delle attività.', icon: 'C', route: '/admin/calendario', available: true },
   ];
 }

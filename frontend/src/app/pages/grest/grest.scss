@@ -1,0 +1,78 @@
+// Stili comuni delle pagine Grest (stessi token del portale: styles.scss).
+.hero-sm {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+  padding: 2.25rem 0;
+  text-align: center;
+  h1 { color: white; margin-bottom: .4rem; }
+  p { opacity: .9; margin: 0 auto; max-width: 640px; }
+}
+.box {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+}
+.narrow { max-width: 480px; margin: 0 auto; }
+.muted { color: var(--color-text-muted); }
+.hint { display: block; font-size: .8rem; color: var(--color-text-muted); margin-top: .3rem; }
+.alert-ok {
+  background: #e7f6ec;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+.alert-info {
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem .25rem;
+  margin: 0 0 1.25rem;
+  legend { font-weight: 700; color: var(--color-primary-dark); padding: 0 .4rem; }
+}
+.row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1rem;
+  @media (max-width: 640px) { grid-template-columns: 1fr; }
+}
+.row-4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 0 .75rem;
+  @media (max-width: 760px) { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: .6rem;
+  margin: .5rem 0 1rem;
+  font-size: .95rem;
+  input { width: auto; margin-top: .25rem; flex: 0 0 auto; }
+}
+// Domanda Sì/No del modulo cartaceo
+.domanda {
+  padding: .85rem 0;
+  border-bottom: 1px solid var(--color-border);
+  &:last-child { border-bottom: none; }
+  p { margin: 0 0 .5rem; }
+  .scelte { display: flex; gap: 1.5rem; }
+  label { display: flex; align-items: center; gap: .4rem; font-weight: 600; cursor: pointer; }
+  input[type=radio], input[type=checkbox] { width: auto; }
+  textarea { margin-top: .6rem; }
+  .nota { font-size: .85rem; color: var(--color-text-muted); font-style: italic; margin-top: .4rem; }
+}
+.obbligatoria { color: #b91c1c; }
+.actions {
+  display: flex;
+  gap: .75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 1.25rem;
+}
+.btn[disabled] { opacity: .6; cursor: not-allowed; }
+.req::after { content: ' *'; color: #b91c1c; }

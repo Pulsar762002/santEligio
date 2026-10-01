@@ -55,6 +55,7 @@ db.createCollection('utenti');
 db.createCollection('intenzioni_preghiera');
 db.createCollection('calendario_attivita');
 db.createCollection('calendario_intestazioni');
+db.createCollection('grest_iscritti');   // portale Grest (indici creati dallo schema Mongoose)
 
 // ── Indici ────────────────────────────────────────────────────
 db.news.createIndex({ createdAt: -1 });
