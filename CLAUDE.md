@@ -59,7 +59,7 @@ npm run seed:contenuti  # runs node dist/seed-contenuti → carica pagine/gruppi
 ```
 
 Mongoose collection names are pinned explicitly via `@Schema({ collection: ... })`
-(`utenti`, `eventi`, `orari_messe`, `news`, `pagine`, `gruppi`, `intenzioni_preghiera`, `calendario_attivita`, `calendario_intestazioni`, `grest_iscritti`) so they match the validators and indexes
+(`utenti`, `eventi`, `orari_messe`, `news`, `pagine`, `gruppi`, `intenzioni_preghiera`, `calendario_attivita`, `calendario_intestazioni`, `grest_iscritti`, `grest_impostazioni`) so they match the validators and indexes
 declared in `mongo-init/01-init.js`. Do not rely on Mongoose's default pluralization.
 
 ## Local dev URLs
@@ -150,10 +150,11 @@ Portato dal vecchio portale Express+SQLite (`~/portals/grest` sul server) dentro
 
 - **Collection** `grest_iscritti` (schema `backend/src/grest/schemas/grest-iscritto.schema.ts`): un documento per bambino/a = account famiglia, con sottodocumenti `autorizzazione` e `delega`. I nomi dei campi ricalcano le vecchie colonne SQLite (`nomePadre`, `mobilePhonePadre`, ...); `legacyId` = vecchio `users.id`.
 - **Auth famiglie separata**: `POST /api/grest/login` firma con `GREST_JWT_SECRET` (o derivato da `JWT_SECRET`) e strategy passport `grest-jwt` (`GrestJwtGuard`). Un token famiglia NON passa `JwtAuthGuard` e viceversa. Password bcrypt; username = CamelCase di nome+cognome del figlio, login case-insensitive (`usernameLower`).
-- **Rotte**: pubbliche `GET /api/grest/stato`, `POST /api/grest/registrazione`, `GET|POST /api/grest/attivazione` (link email monouso), `POST /api/grest/login`; famiglia (`GrestJwtGuard`) `GET /api/grest/me`, `PUT /api/grest/me/{iscrizione|autorizzazione|delega|password}`, `GET /api/grest/me/moduli/:modulo` (PDF); admin (`JwtAuthGuard`) `GET /api/grest/admin/iscritti[.csv]`, `GET /api/grest/admin/iscritti/:id[/moduli/:modulo]`, `POST /api/grest/admin/iscritti/:id/link-password`, `DELETE /api/grest/admin/iscritti/:id`.
+- **Rotte**: pubbliche `GET /api/grest/stato`, `POST /api/grest/registrazione`, `GET|POST /api/grest/attivazione` (link email monouso), `POST /api/grest/login`; famiglia (`GrestJwtGuard`) `GET /api/grest/me`, `PUT /api/grest/me/{iscrizione|autorizzazione|delega|password}`, `GET /api/grest/me/moduli/:modulo` (PDF); admin (`JwtAuthGuard`) `GET /api/grest/admin/iscritti[.csv]`, `GET /api/grest/admin/iscritti/:id[/moduli/:modulo]`, `POST /api/grest/admin/iscritti/:id/link-password`, `DELETE /api/grest/admin/iscritti/:id`, `GET|PUT /api/grest/admin/impostazioni` (apertura iscrizioni).
 - **PDF**: i valori dei segnaposto `{{...}}` si leggono dal DB (mai dal client), si compila il `content.xml` dei template `backend/assets/grest/<modulo>_<GREST_ANNO>.odt` e si converte con il servizio **`gotenberg`** (LibreOffice, solo rete interna). Logica di sostituzione = vecchio `generatePDF`, con escape XML.
 - **Import dal vecchio DB**: `npm run seed:grest -- export.json` (JSON `{users, autorizzazioni, deleghe}` da `sqlite3 -json`); idempotente su `legacyId`, cifra le vecchie password in chiaro, alla fine riconfronta ogni campo.
 - **Frontend**: `/grest/accedi`, `/grest/registrazione`, `/grest/attivazione?token=`, `/grest/area` (`grestGuard`), `/admin/grest`; il riquadro di accesso compare sotto la pagina CMS `/p/grest` (`GrestCtaComponent`). `authInterceptor` manda il token Grest alle chiamate `/grest/` (non `/grest/admin/`) e il token admin a tutto il resto.
+- **Apertura iscrizioni**: interruttore in `/admin/grest`, salvato nella collection `grest_impostazioni` (documento unico `chiave: 'grest'`); finché l'admin non lo usa vale `GREST_ISCRIZIONI_APERTE`. Il limite `GREST_MAX_ISCRITTI` blocca comunque.
 - **Nuova edizione**: aggiornare i template ODT in `backend/assets/grest/`, `GREST_ANNO`, `GREST_MAX_ISCRITTI` e i testi legati all'anno in `frontend/src/app/core/models/grest.model.ts` (`TESTO_USCITA1`, `NOTA_CONSEGNA_DELEGA`).
 
 ## SSL / Certbot

@@ -9,6 +9,10 @@ import { isValidObjectId, Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { GrestIscritto, GrestIscrittoDocument } from './schemas/grest-iscritto.schema';
+import {
+  GrestImpostazioni, GrestImpostazioniDocument, IMPOSTAZIONI_GREST,
+} from './schemas/grest-impostazioni.schema';
+import { ImpostazioniDto } from './dto/impostazioni.dto';
 import { RegistrazioneDto } from './dto/registrazione.dto';
 import { IscrizioneDto } from './dto/iscrizione.dto';
 import { AutorizzazioneDto } from './dto/autorizzazione.dto';
@@ -35,6 +39,8 @@ export function emailDestinatari(i: Pick<GrestIscritto, 'emailPadre' | 'emailMad
 export class GrestService {
   constructor(
     @InjectModel(GrestIscritto.name) private readonly model: Model<GrestIscrittoDocument>,
+    @InjectModel(GrestImpostazioni.name)
+    private readonly impostazioniModel: Model<GrestImpostazioniDocument>,
     private readonly config: ConfigService,
     private readonly jwt: JwtService,
     private readonly mail: GrestMailService,
@@ -44,8 +50,11 @@ export class GrestService {
     return Number(this.config.get('GREST_MAX_ISCRITTI', 196));
   }
 
-  private get iscrizioniAperte(): boolean {
-    return this.config.get<string>('GREST_ISCRIZIONI_APERTE', 'true') !== 'false';
+  /** Apertura iscrizioni: scelta dell'admin se presente, altrimenti GREST_ISCRIZIONI_APERTE. */
+  private async iscrizioniAperte(): Promise<{ aperte: boolean; fonte: 'admin' | 'env' }> {
+    const doc = await this.impostazioniModel.findOne({ chiave: IMPOSTAZIONI_GREST }).lean();
+    if (doc) return { aperte: doc.iscrizioniAperte, fonte: 'admin' };
+    return { aperte: this.config.get<string>('GREST_ISCRIZIONI_APERTE', 'true') !== 'false', fonte: 'env' };
   }
 
   private nuovoToken(): string {
@@ -62,15 +71,18 @@ export class GrestService {
 
   async stato() {
     const iscritti = await this.model.countDocuments();
+    const { aperte } = await this.iscrizioniAperte();
     return {
       anno: this.config.get<string>('GREST_ANNO', '2026'),
-      iscrizioniAperte: this.iscrizioniAperte && iscritti < this.maxIscritti,
+      iscrizioniAperte: aperte && iscritti < this.maxIscritti,
       postiEsauriti: iscritti >= this.maxIscritti,
     };
   }
 
   async registra(dto: RegistrazioneDto) {
-    if (!this.iscrizioniAperte) throw new ForbiddenException('Le iscrizioni al Grest sono chiuse.');
+    if (!(await this.iscrizioniAperte()).aperte) {
+      throw new ForbiddenException('Le iscrizioni al Grest sono chiuse.');
+    }
     if ((await this.model.countDocuments()) >= this.maxIscritti) {
       throw new ForbiddenException('Limite massimo di iscritti raggiunto.');
     }
@@ -191,6 +203,25 @@ export class GrestService {
   }
 
   // ── Amministrazione (admin del portale) ───────────────────
+
+  async impostazioni() {
+    const { aperte, fonte } = await this.iscrizioniAperte();
+    return {
+      iscrizioniAperte: aperte,
+      fonte,
+      iscritti: await this.model.countDocuments(),
+      maxIscritti: this.maxIscritti,
+    };
+  }
+
+  async aggiornaImpostazioni(dto: ImpostazioniDto) {
+    await this.impostazioniModel.updateOne(
+      { chiave: IMPOSTAZIONI_GREST },
+      { $set: { iscrizioniAperte: dto.iscrizioniAperte } },
+      { upsert: true },
+    );
+    return this.impostazioni();
+  }
 
   elenco() {
     return this.model.find().select(PRIVATI).sort({ cognomeFiglio: 1, nomeFiglio: 1 }).lean();

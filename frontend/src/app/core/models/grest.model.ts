@@ -74,6 +74,14 @@ export interface GrestStato {
   postiEsauriti: boolean;
 }
 
+export interface GrestImpostazioni {
+  iscrizioniAperte: boolean;
+  /** 'admin' = scelta salvata dal pannello, 'env' = valore iniziale da .env */
+  fonte: 'admin' | 'env';
+  iscritti: number;
+  maxIscritti: number;
+}
+
 export type ModuloGrest = 'iscrizione' | 'autorizzazione' | 'delega';
 
 export const ANNI_CATECHISMO: { value: string; label: string }[] = [

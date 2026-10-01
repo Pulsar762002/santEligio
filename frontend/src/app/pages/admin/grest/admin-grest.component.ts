@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DataTableComponent, ColumnDef } from '../../../shared/data-table/data-table.component';
 import { GrestService, salvaFile } from '../../../core/services/grest.service';
-import { GrestIscritto, ModuloGrest, messaggioErrore } from '../../../core/models/grest.model';
+import { GrestImpostazioni, GrestIscritto, ModuloGrest, messaggioErrore } from '../../../core/models/grest.model';
 
 const siNo = (v: boolean | null | undefined) => (v == null ? '—' : v ? 'Sì' : 'No');
 
@@ -19,6 +19,30 @@ const siNo = (v: boolean | null | undefined) => (v == null ? '—' : v ? 'Sì' :
         </div>
         <button class="btn btn-primary" (click)="csv()" [disabled]="!iscritti().length">Esporta CSV</button>
       </div>
+
+      @if (impostazioni(); as imp) {
+        <div class="iscrizioni" [class.aperte]="imp.iscrizioniAperte">
+          <div>
+            <h2>Nuove iscrizioni: {{ imp.iscrizioniAperte ? 'aperte' : 'chiuse' }}</h2>
+            <p>
+              @if (imp.iscrizioniAperte) {
+                Le famiglie possono registrare nuovi bambini dalla pagina del Grest
+                ({{ imp.iscritti }} iscritti su {{ imp.maxIscritti }} posti).
+              } @else {
+                Il tasto "Nuova iscrizione" è nascosto e le registrazioni vengono rifiutate.
+                Chi è già iscritto continua ad accedere e a scaricare i moduli.
+              }
+            </p>
+            @if (imp.iscrizioniAperte && imp.iscritti >= imp.maxIscritti) {
+              <p class="avviso">Posti esauriti: la registrazione è comunque bloccata dal limite di {{ imp.maxIscritti }}.</p>
+            }
+          </div>
+          <button class="btn" [class.btn-primary]="!imp.iscrizioniAperte" [class.btn-outline]="imp.iscrizioniAperte"
+                  (click)="cambiaIscrizioni(!imp.iscrizioniAperte)" [disabled]="salvaImp()">
+            {{ imp.iscrizioniAperte ? 'Chiudi le iscrizioni' : 'Apri le iscrizioni' }}
+          </button>
+        </div>
+      }
 
       <div class="numeri">
         <div><strong>{{ iscritti().length }}</strong> iscritti</div>
@@ -101,6 +125,16 @@ const siNo = (v: boolean | null | undefined) => (v == null ? '—' : v ? 'Sì' :
     .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
     .back { display: inline-block; font-size: .85rem; margin-bottom: .35rem; }
     .head h1 { margin: 0; }
+    .iscrizioni {
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem 1.5rem; flex-wrap: wrap;
+      background: white; border: 1px solid var(--color-border); border-left: 5px solid #b91c1c;
+      border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1.25rem;
+    }
+    .iscrizioni.aperte { border-left-color: #166534; }
+    .iscrizioni h2 { margin: 0 0 .25rem; font-size: 1.1rem; }
+    .iscrizioni p { margin: 0; font-size: .9rem; color: var(--color-text-muted); max-width: 680px; }
+    .iscrizioni .avviso { color: #b45309; margin-top: .35rem; }
+    .btn[disabled] { opacity: .6; cursor: not-allowed; }
     .numeri { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.25rem; }
     .numeri div { background: white; border: 1px solid var(--color-border); border-radius: var(--radius); padding: .5rem .9rem; font-size: .9rem; }
     .numeri strong { color: var(--color-primary-dark); font-size: 1.1rem; }
@@ -126,6 +160,8 @@ export class AdminGrestComponent {
 
   readonly iscritti = signal<GrestIscritto[]>([]);
   readonly dettaglio = signal<GrestIscritto | null>(null);
+  readonly impostazioni = signal<GrestImpostazioni | null>(null);
+  readonly salvaImp = signal(false);
   readonly error = signal('');
   readonly info = signal('');
   readonly siNo = siNo;
@@ -161,7 +197,30 @@ export class AdminGrestComponent {
     this.ricarica();
   }
 
+  cambiaIscrizioni(aperte: boolean): void {
+    const msg = aperte
+      ? 'Aprire le nuove iscrizioni? Il tasto "Nuova iscrizione" tornerà visibile sul sito.'
+      : 'Chiudere le nuove iscrizioni? Il tasto "Nuova iscrizione" sparirà dal sito.';
+    if (!confirm(msg)) return;
+    this.salvaImp.set(true);
+    this.error.set('');
+    this.grest.salvaImpostazioni(aperte).subscribe({
+      next: (imp) => {
+        this.impostazioni.set(imp);
+        this.salvaImp.set(false);
+      },
+      error: () => {
+        this.salvaImp.set(false);
+        this.error.set('Impossibile salvare l\'impostazione delle iscrizioni.');
+      },
+    });
+  }
+
   private ricarica(): void {
+    this.grest.impostazioni().subscribe({
+      next: (imp) => this.impostazioni.set(imp),
+      error: () => this.error.set('Impossibile leggere lo stato delle iscrizioni.'),
+    });
     this.grest.elenco().subscribe({
       next: (l) => this.iscritti.set(l),
       error: () => this.error.set('Impossibile caricare gli iscritti.'),

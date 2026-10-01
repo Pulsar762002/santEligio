@@ -15,6 +15,7 @@ import { GrestUtente } from './auth/grest-jwt.strategy';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { MODULI, ModuloGrest } from './grest.constants';
 import { iscrittiCsv } from './grest-csv';
+import { ImpostazioniDto } from './dto/impostazioni.dto';
 
 const moduloPipe = new ParseEnumPipe(Object.fromEntries(MODULI.map((m) => [m, m])));
 
@@ -112,6 +113,17 @@ export class GrestAdminController {
     private readonly grest: GrestService,
     private readonly pdfService: GrestPdfService,
   ) {}
+
+  @Get('impostazioni')
+  @Header('Cache-Control', 'no-store')
+  impostazioni() {
+    return this.grest.impostazioni();
+  }
+
+  @Put('impostazioni')
+  aggiornaImpostazioni(@Body() dto: ImpostazioniDto) {
+    return this.grest.aggiornaImpostazioni(dto);
+  }
 
   @Get('iscritti')
   @Header('Cache-Control', 'no-store')

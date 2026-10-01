@@ -9,6 +9,7 @@ import * as bcrypt from 'bcryptjs';
 import { GrestService, emailDestinatari, generaUsername } from './grest.service';
 import { GrestMailService } from './grest-mail.service';
 import { GrestIscritto } from './schemas/grest-iscritto.schema';
+import { GrestImpostazioni } from './schemas/grest-impostazioni.schema';
 import { RegistrazioneDto } from './dto/registrazione.dto';
 
 const registrazione = (): RegistrazioneDto => ({
@@ -27,6 +28,7 @@ describe('GrestService', () => {
     findOne: jest.fn(),
     findById: jest.fn(),
   };
+  const impostazioni = { findOne: jest.fn(), updateOne: jest.fn() };
   const jwt = { sign: jest.fn().mockReturnValue('jwt') };
   const mail = { inviaLink: jest.fn().mockResolvedValue(true), linkAttivazione: jest.fn() };
 
@@ -37,12 +39,15 @@ describe('GrestService', () => {
       providers: [
         GrestService,
         { provide: getModelToken(GrestIscritto.name), useValue: model },
+        { provide: getModelToken(GrestImpostazioni.name), useValue: impostazioni },
         { provide: ConfigService, useValue: { get: (k: string, d?: unknown) => config[k] ?? d } },
         { provide: JwtService, useValue: jwt },
         { provide: GrestMailService, useValue: mail },
       ],
     }).compile();
     service = moduleRef.get(GrestService);
+    // nessuna scelta dell'admin salvata: valgono le variabili d'ambiente
+    impostazioni.findOne.mockReturnValue({ lean: () => Promise.resolve(null) });
   });
 
   it('generaUsername matches the old CamelCase algorithm', () => {
@@ -89,10 +94,43 @@ describe('GrestService', () => {
       await expect(service.registra(registrazione())).rejects.toBeInstanceOf(ForbiddenException);
     });
 
+    it('is refused when an admin closed registrations, whatever the env says', async () => {
+      config.GREST_ISCRIZIONI_APERTE = 'true';
+      impostazioni.findOne.mockReturnValue({ lean: () => Promise.resolve({ iscrizioniAperte: false }) });
+      await expect(service.registra(registrazione())).rejects.toBeInstanceOf(ForbiddenException);
+      expect(model.create).not.toHaveBeenCalled();
+    });
+
+    it('is accepted when an admin reopened registrations closed in the env', async () => {
+      config.GREST_ISCRIZIONI_APERTE = 'false';
+      impostazioni.findOne.mockReturnValue({ lean: () => Promise.resolve({ iscrizioniAperte: true }) });
+      model.countDocuments.mockResolvedValue(0);
+      model.create.mockImplementation(async (d) => d);
+      await expect(service.registra(registrazione())).resolves.toMatchObject({ username: 'LucaMariaDeRossi' });
+    });
+
     it('turns a duplicate username into 409', async () => {
       model.countDocuments.mockResolvedValue(0);
       model.create.mockRejectedValue({ code: 11000 });
       await expect(service.registra(registrazione())).rejects.toBeInstanceOf(ConflictException);
+    });
+  });
+
+  describe('impostazioni', () => {
+    it('reports the env value when the admin never chose', async () => {
+      config.GREST_ISCRIZIONI_APERTE = 'false';
+      model.countDocuments.mockResolvedValue(195);
+      await expect(service.impostazioni()).resolves.toEqual({
+        iscrizioniAperte: false, fonte: 'env', iscritti: 195, maxIscritti: 196,
+      });
+    });
+
+    it('saves the admin choice as a single upserted document', async () => {
+      model.countDocuments.mockResolvedValue(0);
+      await service.aggiornaImpostazioni({ iscrizioniAperte: true });
+      expect(impostazioni.updateOne).toHaveBeenCalledWith(
+        { chiave: 'grest' }, { $set: { iscrizioniAperte: true } }, { upsert: true },
+      );
     });
   });
 

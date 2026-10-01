@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GrestIscritto, GrestIscrittoSchema } from './schemas/grest-iscritto.schema';
+import { GrestImpostazioni, GrestImpostazioniSchema } from './schemas/grest-impostazioni.schema';
 import { GrestService } from './grest.service';
 import { GrestPdfService } from './grest-pdf.service';
 import { GrestMailService } from './grest-mail.service';
@@ -13,7 +14,10 @@ import { grestJwtSecret } from './auth/grest-jwt-secret';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: GrestIscritto.name, schema: GrestIscrittoSchema }]),
+    MongooseModule.forFeature([
+      { name: GrestIscritto.name, schema: GrestIscrittoSchema },
+      { name: GrestImpostazioni.name, schema: GrestImpostazioniSchema },
+    ]),
     PassportModule,
     // JwtService locale al modulo: firma con il segreto delle famiglie, non con JWT_SECRET.
     JwtModule.registerAsync({

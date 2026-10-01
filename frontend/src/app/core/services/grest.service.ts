@@ -4,7 +4,7 @@ import { tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   GrestAutorizzazione, GrestDatiFamiglia, GrestDelega, GrestIscritto, GrestIscrizione,
-  GrestStato, ModuloGrest,
+  GrestImpostazioni, GrestStato, ModuloGrest,
 } from '../models/grest.model';
 
 const TOKEN_KEY = 'grest_token';
@@ -88,6 +88,14 @@ export class GrestService {
   }
 
   // ── Amministrazione (token admin del portale) ──
+
+  impostazioni() {
+    return this.http.get<GrestImpostazioni>(`${this.url}/admin/impostazioni`);
+  }
+
+  salvaImpostazioni(iscrizioniAperte: boolean) {
+    return this.http.put<GrestImpostazioni>(`${this.url}/admin/impostazioni`, { iscrizioniAperte });
+  }
 
   elenco() {
     return this.http.get<GrestIscritto[]>(`${this.url}/admin/iscritti`);
