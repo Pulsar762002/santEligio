@@ -206,6 +206,7 @@ Il server deve avere già `.env` e `nginx/ssl/` configurati — il deploy fa sol
 ## Frontend conventions (Angular 17)
 
 - All components are standalone — no NgModule. Import dependencies explicitly per component.
+- **Testi formattati** (pagine, aree, notizie, descrizioni eventi): usare `<app-editor-testo name="…" [(ngModel)]="…" [html]="isAdmin" />` (`shared/editor-testo`, TipTap v2), mai textarea con HTML. Salva HTML semplice (p, h3, strong, em, ul/ol, a, img, `div.avviso`; conserva `ul.appuntamenti`); il testo semplice storico viene convertito in paragrafi. Il pulsante HTML è solo per l'admin. Gli elenchi salvati come `<li><p>` restano compatti grazie a `li > p { margin: 0 }` in `styles.scss`.
 - Use `inject()` in field initializers, not constructor injection.
 - Use `toSignal()` from `@angular/core/rxjs-interop` to bridge HTTP observables to signals. Always pass `{ initialValue: [] }` (or a typed default) to avoid `undefined` signal values where the template iterates.
 - New control flow: `@if` / `@for` / `@else` — do **not** import `NgIf`/`NgFor`.

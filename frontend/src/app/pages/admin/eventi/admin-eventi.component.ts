@@ -8,6 +8,7 @@ import { Evento } from '../../../core/models/evento.model';
 import { assetUrl } from '../../../core/utils/asset-url';
 import { DataTableComponent, ColumnDef } from '../../../shared/data-table/data-table.component';
 import { isoToLocalInput, localInputToIso } from '../../../core/utils/date-input';
+import { EditorTestoComponent } from '../../../shared/editor-testo/editor-testo.component';
 
 interface EventoForm {
   titolo: string;
@@ -26,7 +27,7 @@ function emptyForm(): EventoForm {
 @Component({
   selector: 'app-admin-eventi',
   standalone: true,
-  imports: [RouterLink, FormsModule, DataTableComponent],
+  imports: [RouterLink, FormsModule, DataTableComponent, EditorTestoComponent],
   template: `
     <div class="container page-content">
       <div class="head">
@@ -86,7 +87,7 @@ function emptyForm(): EventoForm {
 
           <div class="form-group">
             <label for="descrizione">Descrizione</label>
-            <textarea id="descrizione" name="descrizione" rows="4" [(ngModel)]="form.descrizione"></textarea>
+            <app-editor-testo name="descrizione" [(ngModel)]="form.descrizione" [html]="true" />
           </div>
 
           <label class="check">

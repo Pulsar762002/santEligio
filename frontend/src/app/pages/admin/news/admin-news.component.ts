@@ -7,6 +7,7 @@ import { UploadsService } from '../../../core/services/uploads.service';
 import { News, CategoriaNews } from '../../../core/models/news.model';
 import { assetUrl } from '../../../core/utils/asset-url';
 import { DataTableComponent, ColumnDef } from '../../../shared/data-table/data-table.component';
+import { EditorTestoComponent } from '../../../shared/editor-testo/editor-testo.component';
 
 interface NewsForm {
   titolo: string;
@@ -25,7 +26,7 @@ const CATEGORIE: CategoriaNews[] = ['liturgia', 'catechismo', 'caritas', 'eventi
 @Component({
   selector: 'app-admin-news',
   standalone: true,
-  imports: [RouterLink, TitleCasePipe, FormsModule, DataTableComponent],
+  imports: [RouterLink, TitleCasePipe, FormsModule, DataTableComponent, EditorTestoComponent],
   template: `
     <div class="container page-content">
       <div class="head">
@@ -79,7 +80,7 @@ const CATEGORIE: CategoriaNews[] = ['liturgia', 'catechismo', 'caritas', 'eventi
 
           <div class="form-group">
             <label for="testo">Testo *</label>
-            <textarea id="testo" name="testo" rows="8" [(ngModel)]="form.testo"></textarea>
+            <app-editor-testo name="testo" [(ngModel)]="form.testo" [html]="true" />
           </div>
 
           <label class="check">

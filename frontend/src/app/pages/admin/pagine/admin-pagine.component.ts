@@ -6,6 +6,7 @@ import { UploadsService } from '../../../core/services/uploads.service';
 import { Pagina, SezionePagina, SEZIONE_LABELS } from '../../../core/models/pagina.model';
 import { assetUrl } from '../../../core/utils/asset-url';
 import { DataTableComponent, ColumnDef } from '../../../shared/data-table/data-table.component';
+import { EditorTestoComponent } from '../../../shared/editor-testo/editor-testo.component';
 
 const SEZIONI: SezionePagina[] = [
   'parrocchia', 'parroco', 'diacono', 'caritas',
@@ -35,7 +36,7 @@ function slugify(s: string): string {
 @Component({
   selector: 'app-admin-pagine',
   standalone: true,
-  imports: [RouterLink, FormsModule, DataTableComponent],
+  imports: [RouterLink, FormsModule, DataTableComponent, EditorTestoComponent],
   template: `
     <div class="container page-content">
       <div class="head">
@@ -99,9 +100,7 @@ function slugify(s: string): string {
 
           <div class="form-group">
             <label for="contenuto">Contenuto *</label>
-            <textarea id="contenuto" name="contenuto" rows="14" [(ngModel)]="form.contenuto"
-                      class="mono"></textarea>
-            <span class="hint">Accetta HTML: &lt;p&gt;, &lt;h3&gt;, &lt;ul&gt;&lt;li&gt;, &lt;strong&gt;, &lt;br&gt;…</span>
+            <app-editor-testo name="contenuto" [(ngModel)]="form.contenuto" [html]="true" />
           </div>
 
           <label class="check">

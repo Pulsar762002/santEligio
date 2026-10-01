@@ -172,3 +172,7 @@ img { max-width: 100%; }
     border: 1px solid #fca5a5;
   }
 }
+
+// L'editor visuale salva il testo degli elenchi come <li><p>…</p></li>:
+// nessun margine extra, così gli elenchi restano compatti come prima.
+li > p { margin: 0 !important; }

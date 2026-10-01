@@ -8,6 +8,7 @@ import { UploadsService } from '../../../core/services/uploads.service';
 import { ContenutoArea, Esito, EventoArea } from '../../../core/models/area.model';
 import { assetUrl } from '../../../core/utils/asset-url';
 import { isoToLocalInput, localInputToIso } from '../../../core/utils/date-input';
+import { EditorTestoComponent } from '../../../shared/editor-testo/editor-testo.component';
 
 interface FormEvento {
   titolo: string;
@@ -31,7 +32,7 @@ function errore(err: any, fallback: string): string {
 @Component({
   selector: 'app-admin-area',
   standalone: true,
-  imports: [FormsModule, RouterLink, DatePipe],
+  imports: [FormsModule, RouterLink, DatePipe, EditorTestoComponent],
   template: `
     <div class="container page-content">
       <a routerLink="/admin/aree" class="back">← {{ auth.isAdmin() ? 'Aree' : 'Le mie aree' }}</a>
@@ -79,13 +80,9 @@ function errore(err: any, fallback: string): string {
               <input type="file" accept="image/*" (change)="carica($event, 'pagina')" [disabled]="uploading()" />
             </div>
             <div class="form-group">
-              <label for="contenuto">Testo della pagina * <span class="hint-inline">(HTML: &lt;p&gt;, &lt;h3&gt;, &lt;ul&gt;&lt;li&gt;, &lt;strong&gt;…)</span></label>
-              <textarea id="contenuto" name="contenuto" rows="14" class="mono" [(ngModel)]="contenuto.contenuto" required></textarea>
+              <label>Testo della pagina *</label>
+              <app-editor-testo name="contenuto" [(ngModel)]="contenuto.contenuto" required [html]="auth.isAdmin()" />
             </div>
-            <details class="anteprima">
-              <summary>Anteprima del testo</summary>
-              <div class="prosa" [innerHTML]="contenuto.contenuto"></div>
-            </details>
             <div class="form-actions">
               <button type="submit" class="btn btn-primary" [disabled]="saving() || !fc.valid">
                 {{ saving() ? 'Salvataggio…' : contributor() ? 'Invia in approvazione' : 'Pubblica' }}
@@ -127,7 +124,7 @@ function errore(err: any, fallback: string): string {
             </div>
             <div class="form-group">
               <label for="descrizione">Descrizione</label>
-              <textarea id="descrizione" name="descrizione" rows="4" [(ngModel)]="evento.descrizione"></textarea>
+              <app-editor-testo name="descrizione" [(ngModel)]="evento.descrizione" [html]="auth.isAdmin()" />
             </div>
             <label class="check">
               <input type="checkbox" name="pubblicato" [(ngModel)]="evento.pubblicato" /> Visibile sul sito
@@ -179,14 +176,9 @@ function errore(err: any, fallback: string): string {
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
     @media (max-width: 640px) { .row-2 { grid-template-columns: 1fr; } }
     textarea { resize: vertical; }
-    textarea.mono { font-family: ui-monospace, monospace; font-size: .85rem; }
     .hint { font-size: .85rem; color: #b45309; margin-top: 0; }
-    .hint-inline { font-weight: 400; color: var(--color-text-muted); font-size: .8rem; }
     .img-preview { display: flex; align-items: flex-start; gap: .75rem; margin-bottom: .6rem; }
     .img-preview img { max-width: 220px; max-height: 140px; border-radius: var(--radius); border: 1px solid var(--color-border); object-fit: cover; }
-    .anteprima { margin: .5rem 0 1rem; }
-    .anteprima summary { cursor: pointer; color: var(--color-primary); font-size: .9rem; }
-    .anteprima .prosa { border: 1px dashed var(--color-border); border-radius: var(--radius); padding: 1rem; margin-top: .5rem; background: var(--color-bg); }
     .check { display: flex; align-items: center; gap: .5rem; margin: .5rem 0 1rem; }
     .check input { width: auto; }
     .form-actions { display: flex; gap: .75rem; }
