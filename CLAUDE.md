@@ -153,6 +153,7 @@ I contenuti del vecchio sito (`old/`) sono estratti in `src/seed-data/` (`pagine
 - **Aree**: pagina = `pagine.slug` uguale alla chiave (creata al primo salvataggio, sezione `organismi`); `giardino-di-giada` è un `gruppo`. Gli eventi hanno il campo `area`; le API `/api/aree/:area/...` vedono solo quelli dell'area.
 - **Approvazioni**: un contributor che salva crea un documento in `proposte` (`in_attesa`); il sito mostra la versione precedente finché un responsabile dell'area (o un admin) non approva — solo allora la modifica viene applicata. I contributor non eliminano eventi.
 - Nessun admin può togliersi il ruolo o eliminarsi e deve restare sempre almeno un admin attivo. `npm run seed` crea l'admin iniziale.
+- **Account principale protetto**: l'utente con email `ADMIN_EMAIL` (quello di `npm run seed`) non può essere eliminato, disattivato né cambiare ruolo da nessuno (`UsersService.protetto`); nell'elenco ha `protetto: true` e nessun tasto Elimina. Nome e password restano modificabili.
 - **Frontend**: `AuthService.me()` (da `/auth/me`) con `isAdmin/isStaff/puoGestireGrest/puoApprovare`; guard `adminGuard` (solo admin), `staffGuard` (pannello), `grestAdminGuard`, `loggatoGuard`. Pagine `/admin/utenti`, `/admin/aree`, `/admin/aree/:area`, `/admin/approvazioni`, `/profilo`.
 
 ## Grest (iscrizioni famiglie)

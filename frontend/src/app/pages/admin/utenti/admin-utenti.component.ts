@@ -61,7 +61,8 @@ function errore(err: any, fallback: string): string {
             <div class="ruoli">
               @for (r of ruoli; track r.value) {
                 <label class="ruolo" [class.scelto]="form.ruolo === r.value">
-                  <input type="radio" name="ruolo" [value]="r.value" [(ngModel)]="form.ruolo" (ngModelChange)="pulisciAree()" />
+                  <input type="radio" name="ruolo" [value]="r.value" [(ngModel)]="form.ruolo" (ngModelChange)="pulisciAree()"
+                         [disabled]="protetto()" />
                   <span><strong>{{ r.label }}</strong><small>{{ r.descrizione }}</small></span>
                 </label>
               }
@@ -103,10 +104,14 @@ function errore(err: any, fallback: string): string {
               <span class="hint">Comunicala all'utente: potrà cambiarla da "Il mio profilo".</span>
             </div>
           } @else {
-            <label class="check">
-              <input type="checkbox" name="attivo" [(ngModel)]="form.attivo" />
-              Account attivo (se disattivato non può più accedere)
-            </label>
+            @if (protetto()) {
+              <p class="hint">🔒 Account amministratore principale: resta sempre Admin e attivo e non si può eliminare.</p>
+            } @else {
+              <label class="check">
+                <input type="checkbox" name="attivo" [(ngModel)]="form.attivo" />
+                Account attivo (se disattivato non può più accedere)
+              </label>
+            }
           }
 
           <div class="form-actions">
@@ -127,7 +132,9 @@ function errore(err: any, fallback: string): string {
         <ng-template #azioni let-u>
           <button class="link" (click)="modifica(u)">Modifica</button>
           <button class="link" (click)="nuovaPassword(u)">Password</button>
-          @if (u._id !== auth.me()?.userId) {
+          @if (u.protetto) {
+            <span class="protetto" title="Account amministratore principale: non si può eliminare">🔒 Principale</span>
+          } @else if (u._id !== auth.me()?.userId) {
             <button class="link danger" (click)="elimina(u)">Elimina</button>
           }
         </ng-template>
@@ -161,6 +168,7 @@ function errore(err: any, fallback: string): string {
     .link { background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 0 .4rem; font-size: .85rem; }
     .link:hover { text-decoration: underline; }
     .link.danger { color: #b91c1c; }
+    .protetto { font-size: .8rem; color: var(--color-text-muted); padding: 0 .4rem; white-space: nowrap; }
     .btn[disabled] { opacity: .6; cursor: not-allowed; }
   `],
 })
@@ -173,6 +181,7 @@ export class AdminUtentiComponent {
   readonly areeDisponibili = signal<AreaPortale[]>([]);
   readonly editing = signal(false);
   readonly editId = signal<string | null>(null);
+  readonly protetto = signal(false);
   readonly saving = signal(false);
   readonly error = signal('');
   readonly info = signal('');
@@ -228,6 +237,7 @@ export class AdminUtentiComponent {
   nuovo(): void {
     this.form = vuoto();
     this.editId.set(null);
+    this.protetto.set(false);
     this.editing.set(true);
     this.error.set('');
     this.info.set('');
@@ -236,6 +246,7 @@ export class AdminUtentiComponent {
   modifica(u: Utente): void {
     this.form = { email: u.email, nome: u.nome ?? '', ruolo: u.ruolo, aree: [...(u.aree ?? [])], password: '', attivo: u.attivo !== false };
     this.editId.set(u._id);
+    this.protetto.set(!!u.protetto);
     this.editing.set(true);
     this.error.set('');
     this.info.set('');

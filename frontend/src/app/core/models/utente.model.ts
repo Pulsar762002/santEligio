@@ -23,6 +23,8 @@ export interface Utente {
   ruolo: Ruolo;
   aree: string[];
   attivo: boolean;
+  /** Account amministratore principale: non eliminabile né disattivabile. */
+  protetto?: boolean;
   createdAt?: string;
 }
 

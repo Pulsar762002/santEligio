@@ -2,6 +2,7 @@ import {
   BadRequestException, ConflictException, Injectable, NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { ConfigService } from '@nestjs/config';
 import { isValidObjectId, Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { User, UserDocument } from './schemas/user.schema';
@@ -20,7 +21,19 @@ function normalizza<T extends UtenteLean>(u: T) {
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private readonly config: ConfigService,
+  ) {}
+
+  /**
+   * Account principale (ADMIN_EMAIL, lo stesso creato da `npm run seed`): nessuno
+   * può eliminarlo, disattivarlo o cambiargli ruolo. Nome e password restano modificabili.
+   */
+  private protetto(email: string): boolean {
+    const principale = this.config.get<string>('ADMIN_EMAIL')?.trim().toLowerCase();
+    return !!principale && (email ?? '').toLowerCase() === principale;
+  }
 
   findByEmail(email: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ email: email.toLowerCase() });
@@ -44,12 +57,12 @@ export class UsersService {
 
   async elenco() {
     const utenti = await this.userModel.find().select(PUBBLICO).sort({ ruolo: 1, nome: 1, email: 1 }).lean();
-    return utenti.map((u) => normalizza(u as UtenteLean));
+    return utenti.map((u) => ({ ...normalizza(u as UtenteLean), protetto: this.protetto(u.email) }));
   }
 
   private async pubblico(id: string) {
     const u = await this.userModel.findById(id).select(PUBBLICO).lean();
-    return u && normalizza(u as UtenteLean);
+    return u && { ...normalizza(u as UtenteLean), protetto: this.protetto(u.email) };
   }
 
   /** Aree coerenti col ruolo: admin/utente nessuna; il Grest non si assegna ai contributor. */
@@ -101,6 +114,9 @@ export class UsersService {
     const u = await this.trova(id);
     const ruolo = dto.ruolo ?? u.ruolo;
     const attivo = dto.attivo ?? u.attivo !== false;
+    if (this.protetto(u.email) && (ruolo !== 'admin' || !attivo)) {
+      throw new BadRequestException("L'account amministratore principale non può essere disattivato né cambiare ruolo.");
+    }
     if (u.ruolo === 'admin' && u.attivo !== false && (ruolo !== 'admin' || !attivo)) {
       if (id === chiEsegue) throw new BadRequestException('Non puoi togliere a te stesso il ruolo di Admin.');
       await this.verificaAltroAdmin(id);
@@ -133,6 +149,9 @@ export class UsersService {
   async elimina(id: string, chiEsegue: string) {
     if (id === chiEsegue) throw new BadRequestException('Non puoi eliminare il tuo account.');
     const u = await this.trova(id);
+    if (this.protetto(u.email)) {
+      throw new BadRequestException("L'account amministratore principale non può essere eliminato.");
+    }
     if (u.ruolo === 'admin' && u.attivo !== false) await this.verificaAltroAdmin(id);
     await u.deleteOne();
     return { ok: true };

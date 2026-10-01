@@ -3,6 +3,7 @@ import { getModelToken } from '@nestjs/mongoose';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './schemas/user.schema';
+import { ConfigService } from '@nestjs/config';
 
 describe('UsersService (gestione utenti)', () => {
   let service: UsersService;
@@ -11,13 +12,17 @@ describe('UsersService (gestione utenti)', () => {
     create: jest.fn(), findById: jest.fn(), countDocuments: jest.fn(), find: jest.fn(),
   };
   const id = '64b7f0f0f0f0f0f0f0f0f0f0';
-  const doc = (o: object) => ({ id, save: jest.fn(), deleteOne: jest.fn(), ...o });
+  const doc = (o: object) => ({ id, email: 'altro@esempio.it', save: jest.fn(), deleteOne: jest.fn(), ...o });
 
   beforeEach(async () => {
     jest.clearAllMocks();
     model.findById.mockImplementation(() => Object.assign(Promise.resolve(null), { select: () => select }));
     const m = await Test.createTestingModule({
-      providers: [UsersService, { provide: getModelToken(User.name), useValue: model }],
+      providers: [
+        UsersService,
+        { provide: getModelToken(User.name), useValue: model },
+        { provide: ConfigService, useValue: { get: (k: string) => (k === 'ADMIN_EMAIL' ? 'Admin@Santeligio.it' : undefined) } },
+      ],
     }).compile();
     service = m.get(UsersService);
   });
@@ -62,8 +67,8 @@ describe('UsersService (gestione utenti)', () => {
       { email: 'nuovo@x.it', ruolo: 'contributor', nome: 'N', aree: ['coro'], attivo: false },
     ]) }) }) });
     await expect(service.elenco()).resolves.toEqual([
-      { email: 'vecchio@x.it', ruolo: 'admin', nome: '', aree: [], attivo: true },
-      { email: 'nuovo@x.it', ruolo: 'contributor', nome: 'N', aree: ['coro'], attivo: false },
+      { email: 'vecchio@x.it', ruolo: 'admin', nome: '', aree: [], attivo: true, protetto: false },
+      { email: 'nuovo@x.it', ruolo: 'contributor', nome: 'N', aree: ['coro'], attivo: false, protetto: false },
     ]);
   });
 
@@ -71,6 +76,24 @@ describe('UsersService (gestione utenti)', () => {
     model.findById.mockResolvedValue(doc({ ruolo: 'admin', aree: undefined }));
     model.countDocuments.mockResolvedValue(0);
     await expect(service.modifica(id, { ruolo: 'utente' }, 'altro')).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('protects the main admin account (ADMIN_EMAIL) even when other admins exist', async () => {
+    model.countDocuments.mockResolvedValue(5);
+    const principale = doc({ email: 'admin@santeligio.it', ruolo: 'admin', attivo: true, aree: [] });
+    model.findById.mockResolvedValue(principale);
+    await expect(service.elimina(id, 'altro-admin')).rejects.toBeInstanceOf(BadRequestException);
+    await expect(service.modifica(id, { attivo: false }, 'altro-admin')).rejects.toBeInstanceOf(BadRequestException);
+    await expect(service.modifica(id, { ruolo: 'responsabile', aree: ['coro'] }, 'altro-admin')).rejects.toBeInstanceOf(BadRequestException);
+    expect(principale.deleteOne).not.toHaveBeenCalled();
+    expect(principale.save).not.toHaveBeenCalled();
+  });
+
+  it('still lets you rename the main account and change its password', async () => {
+    const principale = doc({ email: 'admin@santeligio.it', ruolo: 'admin', attivo: true, aree: [] });
+    model.findById.mockResolvedValue(principale);
+    await service.impostaPassword(id, 'nuovapassword');
+    expect(principale.save).toHaveBeenCalled();
   });
 
   it('forbids demoting or deleting yourself', async () => {
