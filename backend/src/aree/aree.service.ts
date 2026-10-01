@@ -3,7 +3,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, isValidObjectId, Model } from 'mongoose';
-import { Area, AREE, trovaArea } from './aree.registry';
+import { Area, AREE, CHIAVI_AREE, trovaArea } from './aree.registry';
 import { Proposta, PropostaDocument, StatoProposta } from './schemas/proposta.schema';
 import { ContenutoAreaDto } from './dto/contenuto-area.dto';
 import { Pagina, PaginaDocument, SezionePagina } from '../pagine/schemas/pagina.schema';
@@ -15,6 +15,11 @@ import { UtenteAutenticato, haArea } from '../auth/ruoli';
 
 /** Esito di un salvataggio: applicato subito o in attesa di approvazione. */
 export type Esito<T> = { inAttesa: false; risultato: T } | { inAttesa: true; proposta: PropostaDocument };
+
+/** Aree a cui si possono associare eventi (tutte tranne il Grest, che ha il suo portale). */
+const AREE_EVENTI = CHIAVI_AREE.filter((k) => trovaArea(k)?.tipo !== 'grest');
+
+const unici = (l: string[]) => [...new Set(l)];
 
 @Injectable()
 export class AreeService {
@@ -34,8 +39,9 @@ export class AreeService {
     return area;
   }
 
-  private puoApprovare(u: UtenteAutenticato, area: string): boolean {
-    return u.ruolo === 'admin' || (u.ruolo === 'responsabile' && u.aree.includes(area));
+  /** Approva: admin, o responsabile di almeno una delle aree interessate. */
+  private puoApprovare(u: UtenteAutenticato, aree: string[]): boolean {
+    return u.ruolo === 'admin' || (u.ruolo === 'responsabile' && aree.some((a) => u.aree.includes(a)));
   }
 
   private nuovaProposta(u: UtenteAutenticato, p: Partial<Proposta>) {
@@ -47,12 +53,19 @@ export class AreeService {
   async mie(u: UtenteAutenticato) {
     const aree = u.ruolo === 'admin' ? AREE : AREE.filter((a) => u.aree.includes(a.chiave));
     const chiavi = aree.map((a) => a.chiave);
-    const [pagine, gruppi, pendenti] = await Promise.all([
+    const [pagine, gruppi, pendenti, eventi] = await Promise.all([
       this.pagine.find({ slug: { $in: chiavi } }).select('slug titolo pubblicato').lean(),
       this.gruppi.find({ slug: { $in: chiavi } }).select('slug nome pubblicato area').lean(),
       this.proposte.aggregate<{ _id: string; n: number }>([
-        { $match: { area: { $in: chiavi }, stato: 'in_attesa' } },
-        { $group: { _id: '$area', n: { $sum: 1 } } },
+        { $match: { aree: { $in: chiavi }, stato: 'in_attesa' } },
+        { $unwind: '$aree' },
+        { $match: { aree: { $in: chiavi } } },
+        { $group: { _id: '$aree', n: { $sum: 1 } } },
+      ]),
+      this.eventi.aggregate<{ _id: string; n: number }>([
+        { $match: { aree: { $in: chiavi } } },
+        { $unwind: '$aree' },
+        { $group: { _id: '$aree', n: { $sum: 1 } } },
       ]),
     ]);
     return aree.map((a) => {
@@ -64,6 +77,7 @@ export class AreeService {
         pubblicato: p?.pubblicato ?? g?.pubblicato ?? false,
         link: a.tipo === 'gruppo' && g ? `/gruppi/${g.area}/${a.chiave}` : a.tipo === 'grest' ? '/p/grest' : `/p/${a.chiave}`,
         propostePendenti: pendenti.find((x) => x._id === a.chiave)?.n ?? 0,
+        eventi: eventi.find((x) => x._id === a.chiave)?.n ?? 0,
       };
     });
   }
@@ -109,43 +123,77 @@ export class AreeService {
     this.areaDiContenuti(chiave, u);
     if (u.ruolo === 'contributor') {
       const proposta = await this.nuovaProposta(u, {
-        tipo: 'contenuto', azione: 'modifica', area: chiave, titolo: d.titolo, dati: { ...d },
+        tipo: 'contenuto', azione: 'modifica', aree: [chiave], titolo: d.titolo, dati: { ...d },
       });
       return { inAttesa: true, proposta };
     }
     return { inAttesa: false, risultato: await this.applicaContenuto(chiave, d) };
   }
 
-  // ── Eventi dell'area ─────────────────────────────────────
+  // ── Eventi (una o più aree per evento) ───────────────────
+  // Admin: tutti gli eventi, qualsiasi area. Responsabili/contributor: gli eventi con
+  // almeno una delle loro aree; possono aggiungere o togliere solo le proprie aree.
 
-  async eventiArea(chiave: string, u: UtenteAutenticato) {
-    this.areaDiContenuti(chiave, u);
-    return this.eventi.find({ area: chiave }).sort({ dataInizio: -1 }).lean();
+  async eventiGestibili(u: UtenteAutenticato, area?: string) {
+    const filtro: FilterQuery<EventoDocument> = {};
+    if (u.ruolo !== 'admin') filtro.aree = { $in: u.aree };
+    if (area) {
+      if (u.ruolo !== 'admin' && !u.aree.includes(area)) throw new ForbiddenException('Area non assegnata al tuo account.');
+      filtro.aree = area;
+    }
+    return this.eventi.find(filtro).sort({ dataInizio: -1 }).lean();
   }
 
-  private async eventoDellArea(chiave: string, id: string) {
+  /** Aree richieste da un non-admin: solo le sue, ammesse per gli eventi. */
+  private areeMie(u: UtenteAutenticato, richieste: string[] = []): string[] {
+    const non = richieste.filter((a) => !u.aree.includes(a) || !AREE_EVENTI.includes(a));
+    if (non.length) throw new ForbiddenException(`Aree non assegnate al tuo account: ${non.join(', ')}`);
+    return unici(richieste);
+  }
+
+  private async eventoGestibile(id: string, u: UtenteAutenticato) {
     const e = isValidObjectId(id) ? await this.eventi.findById(id) : null;
-    if (!e || e.area !== chiave) throw new NotFoundException('Evento non trovato in questa area');
+    if (!e || (u.ruolo !== 'admin' && !(e.aree ?? []).some((a) => u.aree.includes(a)))) {
+      throw new NotFoundException('Evento non trovato tra quelli delle tue aree');
+    }
     return e;
   }
 
-  async creaEvento(chiave: string, dto: CreateEventoDto, u: UtenteAutenticato): Promise<Esito<unknown>> {
-    this.areaDiContenuti(chiave, u);
-    const dati = { ...dto, area: chiave };
+  async creaEvento(dto: CreateEventoDto, u: UtenteAutenticato): Promise<Esito<unknown>> {
+    let aree = unici(dto.aree ?? []);
+    if (u.ruolo !== 'admin') {
+      aree = this.areeMie(u, aree);
+      if (!aree.length) throw new BadRequestException("Scegli almeno una delle tue aree per l'evento.");
+    } else if (aree.some((a) => !AREE_EVENTI.includes(a))) {
+      throw new BadRequestException('Area non valida per gli eventi.');
+    }
+    const dati = { ...dto, aree };
     if (u.ruolo === 'contributor') {
-      const proposta = await this.nuovaProposta(u, { tipo: 'evento', azione: 'crea', area: chiave, titolo: dto.titolo, dati });
+      const proposta = await this.nuovaProposta(u, { tipo: 'evento', azione: 'crea', aree, titolo: dto.titolo, dati });
       return { inAttesa: true, proposta };
     }
     return { inAttesa: false, risultato: await this.eventi.create(dati) };
   }
 
-  async modificaEvento(chiave: string, id: string, dto: UpdateEventoDto, u: UtenteAutenticato): Promise<Esito<unknown>> {
-    this.areaDiContenuti(chiave, u);
-    const e = await this.eventoDellArea(chiave, id);
-    const dati = { ...dto, area: chiave };
+  async modificaEvento(id: string, dto: UpdateEventoDto, u: UtenteAutenticato): Promise<Esito<unknown>> {
+    const e = await this.eventoGestibile(id, u);
+    const attuali = e.aree ?? [];
+    let aree = attuali;
+    if (dto.aree !== undefined) {
+      if (u.ruolo === 'admin') {
+        aree = unici(dto.aree);
+      } else {
+        // le aree degli altri restano; le proprie si aggiungono/tolgono liberamente
+        const mie = this.areeMie(u, dto.aree);
+        aree = unici([...attuali.filter((a) => !u.aree.includes(a)), ...mie]);
+        if (!aree.length) throw new BadRequestException("L'evento deve restare associato ad almeno un'area.");
+      }
+    }
+    const dati = { ...dto, aree };
     if (u.ruolo === 'contributor') {
+      const coinvolte = unici([...attuali, ...aree].filter((a) => u.aree.includes(a)));
       const proposta = await this.nuovaProposta(u, {
-        tipo: 'evento', azione: 'modifica', area: chiave, eventoId: e.id, titolo: dto.titolo ?? e.titolo, dati,
+        tipo: 'evento', azione: 'modifica', aree: coinvolte, eventoId: e.id, titolo: dto.titolo ?? e.titolo, dati,
       });
       return { inAttesa: true, proposta };
     }
@@ -153,10 +201,13 @@ export class AreeService {
     return { inAttesa: false, risultato: await e.save() };
   }
 
-  async eliminaEvento(chiave: string, id: string, u: UtenteAutenticato) {
-    this.areaDiContenuti(chiave, u);
+  /** Admin sempre; responsabile solo se l'evento appartiene esclusivamente alle sue aree. */
+  async eliminaEvento(id: string, u: UtenteAutenticato) {
     if (u.ruolo === 'contributor') throw new ForbiddenException('I contributor non possono eliminare eventi.');
-    const e = await this.eventoDellArea(chiave, id);
+    const e = await this.eventoGestibile(id, u);
+    if (u.ruolo !== 'admin' && !(e.aree ?? []).every((a) => u.aree.includes(a))) {
+      throw new ForbiddenException("L'evento è condiviso con aree non tue: chiedi all'amministratore.");
+    }
     await e.deleteOne();
     return { ok: true };
   }
@@ -166,7 +217,7 @@ export class AreeService {
   /** Admin: tutte; Responsabile: delle sue aree; Contributor: le proprie. */
   proposteVisibili(u: UtenteAutenticato, stato?: StatoProposta) {
     const filtro: FilterQuery<PropostaDocument> = {};
-    if (u.ruolo === 'responsabile') filtro.area = { $in: u.aree };
+    if (u.ruolo === 'responsabile') filtro.aree = { $in: u.aree };
     else if (u.ruolo === 'contributor') filtro.autoreId = u.userId;
     if (stato) filtro.stato = stato;
     return this.proposte.find(filtro).sort({ createdAt: -1 }).limit(200).lean();
@@ -175,7 +226,7 @@ export class AreeService {
   private async propostaDaDecidere(id: string, u: UtenteAutenticato) {
     const p = isValidObjectId(id) ? await this.proposte.findById(id) : null;
     if (!p) throw new NotFoundException('Proposta non trovata');
-    if (!this.puoApprovare(u, p.area)) throw new ForbiddenException('Non sei responsabile di questa area.');
+    if (!this.puoApprovare(u, p.aree)) throw new ForbiddenException('Non sei responsabile di questa area.');
     if (p.stato !== 'in_attesa') throw new ConflictException('La proposta è già stata decisa.');
     return p;
   }
@@ -183,12 +234,13 @@ export class AreeService {
   async approva(id: string, u: UtenteAutenticato) {
     const p = await this.propostaDaDecidere(id, u);
     if (p.tipo === 'contenuto') {
-      await this.applicaContenuto(p.area, p.dati as unknown as ContenutoAreaDto);
+      await this.applicaContenuto(p.aree[0], p.dati as unknown as ContenutoAreaDto);
     } else if (p.azione === 'crea') {
-      await this.eventi.create({ ...p.dati, area: p.area });
+      await this.eventi.create({ ...p.dati });
     } else {
-      const e = await this.eventoDellArea(p.area, p.eventoId ?? '');
-      e.set({ ...p.dati, area: p.area });
+      const e = isValidObjectId(p.eventoId ?? '') ? await this.eventi.findById(p.eventoId) : null;
+      if (!e) throw new NotFoundException("L'evento della proposta non esiste più.");
+      e.set({ ...p.dati });
       await e.save();
     }
     p.stato = 'approvata';

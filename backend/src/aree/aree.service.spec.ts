@@ -50,7 +50,7 @@ describe('AreeService', () => {
     const r = await service.salvaContenuto('coro', contenuto, u('contributor', ['coro']));
     expect(r.inAttesa).toBe(true);
     expect(pagine.findOneAndUpdate).not.toHaveBeenCalled();
-    expect(proposte.create.mock.calls[0][0]).toMatchObject({ tipo: 'contenuto', area: 'coro', stato: 'in_attesa', autoreId: 'u1' });
+    expect(proposte.create.mock.calls[0][0]).toMatchObject({ tipo: 'contenuto', aree: ['coro'], stato: 'in_attesa', autoreId: 'u1' });
   });
 
   it('the Contatti page is an area: its responsabile edits the existing page', async () => {
@@ -69,20 +69,80 @@ describe('AreeService', () => {
     await expect(service.salvaContenuto('grest', contenuto, u('responsabile', ['grest']))).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('events are tagged with the area; contributors cannot delete', async () => {
-    eventi.create.mockResolvedValue({});
-    await service.creaEvento('coro', { titolo: 'Concerto', dataInizio: '2026-12-24T21:00:00Z', area: 'lettori' }, u('responsabile', ['coro']));
-    expect(eventi.create.mock.calls[0][0].area).toBe('coro');
-    await expect(service.eliminaEvento('coro', ID, u('contributor', ['coro']))).rejects.toBeInstanceOf(ForbiddenException);
-  });
+  describe('eventi con più aree', () => {
+    const evento = (aree: string[]) => ({ id: ID, titolo: 'E', aree, set: jest.fn(function (this: any, d: any) { Object.assign(this, d); }), save: jest.fn(function (this: any) { return this; }), deleteOne: jest.fn() });
 
-  it('events of another area are not reachable', async () => {
-    eventi.findById.mockResolvedValue({ area: 'lettori' });
-    await expect(service.modificaEvento('coro', ID, { titolo: 'x' }, u('responsabile', ['coro']))).rejects.toBeInstanceOf(NotFoundException);
+    it('admin creates events with any areas, or none', async () => {
+      eventi.create.mockImplementation(async (d) => d);
+      await service.creaEvento({ titolo: 'A', dataInizio: '2026-12-01T10:00:00Z', aree: ['coro', 'caritas', 'coro'] }, u('admin'));
+      expect(eventi.create.mock.calls[0][0].aree).toEqual(['coro', 'caritas']);
+      await service.creaEvento({ titolo: 'B', dataInizio: '2026-12-01T10:00:00Z' }, u('admin'));
+      expect(eventi.create.mock.calls[1][0].aree).toEqual([]);
+    });
+
+    it('responsabili must pick at least one of their own areas', async () => {
+      const dto = { titolo: 'A', dataInizio: '2026-12-01T10:00:00Z' };
+      await expect(service.creaEvento({ ...dto, aree: [] }, u('responsabile', ['coro']))).rejects.toBeInstanceOf(BadRequestException);
+      await expect(service.creaEvento({ ...dto, aree: ['coro', 'lettori'] }, u('responsabile', ['coro']))).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(service.creaEvento({ ...dto, aree: ['grest'] }, u('responsabile', ['grest']))).rejects.toBeInstanceOf(ForbiddenException);
+      eventi.create.mockImplementation(async (d) => d);
+      const r = await service.creaEvento({ ...dto, aree: ['coro'] }, u('responsabile', ['coro', 'lettori']));
+      expect(r.inAttesa).toBe(false);
+    });
+
+    it('contributors create a proposal involving their chosen areas', async () => {
+      proposte.create.mockResolvedValue({});
+      const r = await service.creaEvento({ titolo: 'A', dataInizio: '2026-12-01T10:00:00Z', aree: ['coro'] }, u('contributor', ['coro']));
+      expect(r.inAttesa).toBe(true);
+      expect(eventi.create).not.toHaveBeenCalled();
+      expect(proposte.create.mock.calls[0][0]).toMatchObject({ tipo: 'evento', azione: 'crea', aree: ['coro'] });
+    });
+
+    it('editing a shared event keeps the other areas', async () => {
+      const e = evento(['coro', 'caritas']);
+      eventi.findById.mockResolvedValue(e);
+      await service.modificaEvento(ID, { aree: ['lettori'] }, u('responsabile', ['coro', 'lettori']));
+      expect(e.aree).toEqual(['caritas', 'lettori']);
+    });
+
+    it('events without any of my areas are not reachable (historical events = admin only)', async () => {
+      eventi.findById.mockResolvedValue(evento(['caritas']));
+      await expect(service.modificaEvento(ID, { titolo: 'x' }, u('responsabile', ['coro']))).rejects.toBeInstanceOf(NotFoundException);
+      eventi.findById.mockResolvedValue(evento([]));
+      await expect(service.modificaEvento(ID, { titolo: 'x' }, u('responsabile', ['coro']))).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('cannot leave an event without areas', async () => {
+      eventi.findById.mockResolvedValue(evento(['coro']));
+      await expect(service.modificaEvento(ID, { aree: [] }, u('responsabile', ['coro']))).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('delete: admin always, responsabile only if all areas are his, contributor never', async () => {
+      const condiviso = evento(['coro', 'caritas']);
+      eventi.findById.mockResolvedValue(condiviso);
+      await expect(service.eliminaEvento(ID, u('responsabile', ['coro']))).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(service.eliminaEvento(ID, u('contributor', ['coro']))).rejects.toBeInstanceOf(ForbiddenException);
+      const mio = evento(['coro']);
+      eventi.findById.mockResolvedValue(mio);
+      await service.eliminaEvento(ID, u('responsabile', ['coro']));
+      expect(mio.deleteOne).toHaveBeenCalled();
+      eventi.findById.mockResolvedValue(condiviso);
+      await service.eliminaEvento(ID, u('admin'));
+      expect(condiviso.deleteOne).toHaveBeenCalled();
+    });
+
+    it('lists only the events of my areas', () => {
+      const chain = { sort: () => ({ lean: () => [] }) };
+      eventi.find.mockReturnValue(chain);
+      service.eventiGestibili(u('responsabile', ['coro', 'lettori']));
+      expect(eventi.find).toHaveBeenLastCalledWith({ aree: { $in: ['coro', 'lettori'] } });
+      service.eventiGestibili(u('admin'), 'coro');
+      expect(eventi.find).toHaveBeenLastCalledWith({ aree: 'coro' });
+    });
   });
 
   describe('approvazioni', () => {
-    const proposta = (o: object) => ({ area: 'coro', stato: 'in_attesa', save: jest.fn().mockReturnThis(), ...o });
+    const proposta = (o: object) => ({ aree: ['coro'], stato: 'in_attesa', save: jest.fn().mockReturnThis(), ...o });
 
     it('the area responsabile approves and the change is applied', async () => {
       const p = proposta({ tipo: 'contenuto', azione: 'modifica', dati: contenuto });
@@ -94,10 +154,16 @@ describe('AreeService', () => {
     });
 
     it('approving a new event creates it in the area', async () => {
-      proposte.findById.mockResolvedValue(proposta({ tipo: 'evento', azione: 'crea', dati: { titolo: 'E' } }));
+      proposte.findById.mockResolvedValue(proposta({ tipo: 'evento', azione: 'crea', dati: { titolo: 'E', aree: ['coro', 'lettori'] } }));
       eventi.create.mockResolvedValue({});
       await service.approva(ID, u('admin'));
-      expect(eventi.create).toHaveBeenCalledWith({ titolo: 'E', area: 'coro' });
+      expect(eventi.create).toHaveBeenCalledWith({ titolo: 'E', aree: ['coro', 'lettori'] });
+    });
+
+    it('a responsabile of any involved area can approve', async () => {
+      proposte.findById.mockResolvedValue(proposta({ aree: ['coro', 'lettori'], tipo: 'evento', azione: 'crea', dati: {} }));
+      eventi.create.mockResolvedValue({});
+      await expect(service.approva(ID, u('responsabile', ['lettori']))).resolves.toBeDefined();
     });
 
     it('other areas responsabili and contributors cannot decide; decided proposals are final', async () => {
@@ -112,7 +178,7 @@ describe('AreeService', () => {
       const chain = { sort: () => ({ limit: () => ({ lean: () => [] }) }) };
       proposte.find.mockReturnValue(chain);
       service.proposteVisibili(u('responsabile', ['coro']), 'in_attesa');
-      expect(proposte.find).toHaveBeenLastCalledWith({ area: { $in: ['coro'] }, stato: 'in_attesa' });
+      expect(proposte.find).toHaveBeenLastCalledWith({ aree: { $in: ['coro'] }, stato: 'in_attesa' });
       service.proposteVisibili(u('contributor', ['coro']));
       expect(proposte.find).toHaveBeenLastCalledWith({ autoreId: 'u1' });
       service.proposteVisibili(u('admin'));

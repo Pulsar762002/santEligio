@@ -17,8 +17,12 @@ export class Proposta {
   @Prop({ required: true, enum: ['crea', 'modifica'] })
   azione: AzioneProposta;
 
-  @Prop({ required: true, index: true })
-  area: string;
+  /**
+   * Aree interessate: chi è responsabile di almeno una di queste può approvare.
+   * Contenuto di pagina = la sola area della pagina.
+   */
+  @Prop({ type: [String], required: true, index: true })
+  aree: string[];
 
   /** Evento da modificare (solo tipo evento + azione modifica). */
   @Prop()

@@ -51,7 +51,8 @@ import { AreaMia } from '../../../core/models/area.model';
                   @else { <span class="si">Pagina online</span> }
                 </p>
                 <div class="azioni">
-                  <a [routerLink]="['/admin/aree', a.chiave]" class="btn btn-primary">Gestisci</a>
+                  <a [routerLink]="['/admin/aree', a.chiave]" class="btn btn-primary">Pagina</a>
+                  <a routerLink="/admin/eventi" [queryParams]="{ area: a.chiave }" class="btn btn-outline">Eventi ({{ a.eventi }})</a>
                   @if (a.esiste) { <a [routerLink]="a.link" class="btn btn-outline">Vedi sul sito</a> }
                 </div>
               }

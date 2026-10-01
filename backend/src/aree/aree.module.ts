@@ -5,7 +5,7 @@ import { Pagina, PaginaSchema } from '../pagine/schemas/pagina.schema';
 import { Gruppo, GruppoSchema } from '../gruppi/schemas/gruppo.schema';
 import { Evento, EventoSchema } from '../eventi/schemas/evento.schema';
 import { AreeService } from './aree.service';
-import { AreeController, ProposteController } from './aree.controller';
+import { AreeController, GestioneEventiController, ProposteController } from './aree.controller';
 
 @Module({
   imports: [
@@ -17,6 +17,6 @@ import { AreeController, ProposteController } from './aree.controller';
     ]),
   ],
   providers: [AreeService],
-  controllers: [AreeController, ProposteController],
+  controllers: [AreeController, ProposteController, GestioneEventiController],
 })
 export class AreeModule {}

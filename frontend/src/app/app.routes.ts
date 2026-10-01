@@ -66,7 +66,7 @@ export const routes: Routes = [
   },
   {
     path: 'admin/eventi',
-    canActivate: [adminGuard],
+    canActivate: [staffGuard],
     loadComponent: () => import('./pages/admin/eventi/admin-eventi.component').then(m => m.AdminEventiComponent),
   },
   {

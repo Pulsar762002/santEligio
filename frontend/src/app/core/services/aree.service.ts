@@ -1,7 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { AreaMia, ContenutoArea, Esito, EventoArea, Proposta, StatoProposta } from '../models/area.model';
+import { AreaMia, ContenutoArea, Esito, Proposta, StatoProposta } from '../models/area.model';
+import { AreaPortale } from '../models/utente.model';
+import { Evento } from '../models/evento.model';
 
 /** Contenuti per area (Responsabili e Contributor) e approvazioni. */
 @Injectable({ providedIn: 'root' })
@@ -22,20 +24,28 @@ export class AreeService {
     return this.http.put<Esito<unknown>>(`${this.url}/${area}/contenuto`, { titolo, sottotitolo, contenuto, immagine });
   }
 
-  eventi(area: string) {
-    return this.http.get<EventoArea[]>(`${this.url}/${area}/eventi`);
+  /** Tutte le aree (nomi), per etichettare gli eventi condivisi. */
+  elenco() {
+    return this.http.get<AreaPortale[]>(`${this.url}/elenco`);
   }
 
-  creaEvento(area: string, e: Partial<EventoArea>) {
-    return this.http.post<Esito<EventoArea>>(`${this.url}/${area}/eventi`, e);
+  // ── Eventi gestibili dall'utente (tutti per l'admin, quelli delle proprie aree per gli altri) ──
+
+  eventi(area?: string) {
+    const params = area ? new HttpParams().set('area', area) : undefined;
+    return this.http.get<Evento[]>(`${environment.apiUrl}/gestione/eventi`, { params });
   }
 
-  modificaEvento(area: string, id: string, e: Partial<EventoArea>) {
-    return this.http.patch<Esito<EventoArea>>(`${this.url}/${area}/eventi/${id}`, e);
+  creaEvento(e: Partial<Evento>) {
+    return this.http.post<Esito<Evento>>(`${environment.apiUrl}/gestione/eventi`, e);
   }
 
-  eliminaEvento(area: string, id: string) {
-    return this.http.delete<{ ok: boolean }>(`${this.url}/${area}/eventi/${id}`);
+  modificaEvento(id: string, e: Partial<Evento>) {
+    return this.http.patch<Esito<Evento>>(`${environment.apiUrl}/gestione/eventi/${id}`, e);
+  }
+
+  eliminaEvento(id: string) {
+    return this.http.delete<{ ok: boolean }>(`${environment.apiUrl}/gestione/eventi/${id}`);
   }
 
   proposte(stato?: StatoProposta) {

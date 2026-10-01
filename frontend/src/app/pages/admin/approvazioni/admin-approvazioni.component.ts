@@ -47,7 +47,7 @@ const STATI: { id: StatoProposta | ''; label: string }[] = [
               <span class="tipo">{{ descrizione(p) }}</span>
               <h2>{{ p.titolo || '(senza titolo)' }}</h2>
               <p class="meta">
-                Area <strong>{{ nomeArea(p.area) }}</strong> · da {{ p.autoreNome }} ·
+                {{ p.aree.length > 1 ? 'Aree' : 'Area' }} <strong>{{ nomiAree(p.aree) }}</strong> · da {{ p.autoreNome }} ·
                 {{ p.createdAt | date: 'd MMM yyyy, HH:mm' }}
               </p>
             </div>
@@ -127,11 +127,11 @@ export class AdminApprovazioniComponent {
   private readonly nomi = signal<Record<string, string>>({});
 
   constructor() {
-    this.service.mie().subscribe((aree) => this.nomi.set(Object.fromEntries(aree.map((a) => [a.chiave, a.nome]))));
+    this.service.elenco().subscribe((aree) => this.nomi.set(Object.fromEntries(aree.map((a) => [a.chiave, a.nome]))));
     this.carica();
   }
 
-  nomeArea = (k: string) => this.nomi()[k] ?? k;
+  nomiAree = (aree: string[] = []) => aree.map((k) => this.nomi()[k] ?? k).join(', ');
   etichetta = (s: StatoProposta) => ({ in_attesa: 'In attesa', approvata: 'Approvata', rifiutata: 'Rifiutata' })[s];
 
   descrizione(p: Proposta): string {

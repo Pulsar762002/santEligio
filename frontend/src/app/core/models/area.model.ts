@@ -1,11 +1,11 @@
 import { AreaPortale } from './utente.model';
-import { Evento } from './evento.model';
 
 export interface AreaMia extends AreaPortale {
   esiste: boolean;
   pubblicato: boolean;
   link: string;
   propostePendenti: number;
+  eventi: number;
 }
 
 export interface ContenutoArea {
@@ -22,7 +22,7 @@ export interface Proposta {
   _id: string;
   tipo: 'contenuto' | 'evento';
   azione: 'crea' | 'modifica';
-  area: string;
+  aree: string[];
   eventoId?: string;
   titolo: string;
   dati: Record<string, any>;
@@ -37,5 +37,3 @@ export interface Proposta {
 
 /** Risposta dei salvataggi: applicato subito o inviato in approvazione. */
 export type Esito<T> = { inAttesa: false; risultato: T } | { inAttesa: true; proposta: Proposta };
-
-export type EventoArea = Evento & { area?: string };

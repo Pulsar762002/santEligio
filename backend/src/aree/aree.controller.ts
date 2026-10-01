@@ -5,6 +5,7 @@ import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Ruoli, RUOLI_STAFF, UtenteAutenticato } from '../auth/ruoli';
 import { AreeService } from './aree.service';
+import { AREE } from './aree.registry';
 import { ContenutoAreaDto, RifiutoDto } from './dto/contenuto-area.dto';
 import { CreateEventoDto } from '../eventi/dto/create-evento.dto';
 import { UpdateEventoDto } from '../eventi/dto/update-evento.dto';
@@ -26,6 +27,12 @@ export class AreeController {
     return this.aree.mie(utente(req));
   }
 
+  /** Nomi di tutte le aree (per mostrare le aree degli eventi condivisi). */
+  @Get('elenco')
+  elenco() {
+    return AREE;
+  }
+
   @Get(':area/contenuto')
   @Header('Cache-Control', 'no-store')
   contenuto(@Param('area') area: string, @Req() req: Request) {
@@ -36,28 +43,35 @@ export class AreeController {
   salvaContenuto(@Param('area') area: string, @Body() dto: ContenutoAreaDto, @Req() req: Request) {
     return this.aree.salvaContenuto(area, dto, utente(req));
   }
+}
 
-  @Get(':area/eventi')
+// Gestione eventi per ruolo (Admin, Responsabili, Contributor): /api/gestione/eventi
+// Le regole su aree, approvazioni ed eliminazione sono nel service.
+@UseGuards(JwtAuthGuard)
+@Ruoli(...RUOLI_STAFF)
+@Controller('gestione/eventi')
+export class GestioneEventiController {
+  constructor(private readonly aree: AreeService) {}
+
+  @Get()
   @Header('Cache-Control', 'no-store')
-  eventi(@Param('area') area: string, @Req() req: Request) {
-    return this.aree.eventiArea(area, utente(req));
+  elenco(@Req() req: Request, @Query('area') area?: string) {
+    return this.aree.eventiGestibili(utente(req), area || undefined);
   }
 
-  @Post(':area/eventi')
-  creaEvento(@Param('area') area: string, @Body() dto: CreateEventoDto, @Req() req: Request) {
-    return this.aree.creaEvento(area, dto, utente(req));
+  @Post()
+  crea(@Body() dto: CreateEventoDto, @Req() req: Request) {
+    return this.aree.creaEvento(dto, utente(req));
   }
 
-  @Patch(':area/eventi/:id')
-  modificaEvento(
-    @Param('area') area: string, @Param('id') id: string, @Body() dto: UpdateEventoDto, @Req() req: Request,
-  ) {
-    return this.aree.modificaEvento(area, id, dto, utente(req));
+  @Patch(':id')
+  modifica(@Param('id') id: string, @Body() dto: UpdateEventoDto, @Req() req: Request) {
+    return this.aree.modificaEvento(id, dto, utente(req));
   }
 
-  @Delete(':area/eventi/:id')
-  eliminaEvento(@Param('area') area: string, @Param('id') id: string, @Req() req: Request) {
-    return this.aree.eliminaEvento(area, id, utente(req));
+  @Delete(':id')
+  elimina(@Param('id') id: string, @Req() req: Request) {
+    return this.aree.eliminaEvento(id, utente(req));
   }
 }
 
