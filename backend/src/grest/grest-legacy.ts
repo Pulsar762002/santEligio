@@ -94,6 +94,8 @@ export function mappaIscritto(
     consenso: bool(u.consenso),
     autorizzazione: aut ? mappaAutorizzazione(aut) : null,
     delega: del ? mappaDelega(del) : null,
+    cancellazioneRichiesta: null,
+    cancellazioneMotivo: '',
   };
 }
 

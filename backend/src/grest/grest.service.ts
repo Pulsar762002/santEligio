@@ -211,6 +211,23 @@ export class GrestService {
     return { ok: true };
   }
 
+  /** La famiglia chiede di cancellare account e dati (la esegue poi un responsabile). */
+  async richiediCancellazione(id: string, motivo = '') {
+    const i = await this.trova(id);
+    i.cancellazioneRichiesta = i.cancellazioneRichiesta ?? new Date();
+    i.cancellazioneMotivo = motivo.trim().slice(0, 1000);
+    await i.save();
+    return this.me(id);
+  }
+
+  async annullaCancellazione(id: string) {
+    const i = await this.trova(id);
+    i.cancellazioneRichiesta = null;
+    i.cancellazioneMotivo = '';
+    await i.save();
+    return this.me(id);
+  }
+
   /** Iscritto completo per generare un PDF, dopo aver verificato che il modulo sia compilato. */
   async perModulo(id: string, modulo: ModuloGrest): Promise<GrestIscritto> {
     const i = (await this.trova(id)).toObject();

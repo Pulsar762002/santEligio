@@ -74,6 +74,12 @@ const siNo = (v: boolean | null | undefined) => (v == null ? '—' : v ? 'Sì' :
         <div><strong>{{ conteggi().iscrizione }}</strong> iscrizioni compilate</div>
         <div><strong>{{ conteggi().autorizzazione }}</strong> autorizzazioni</div>
         <div><strong>{{ conteggi().delega }}</strong> deleghe</div>
+        @if (conteggi().cancellazioni) {
+          <button type="button" class="cancellazioni" [class.on]="soloCancellazioni()" (click)="soloCancellazioni.set(!soloCancellazioni())"
+                  title="Mostra solo le famiglie che hanno chiesto la cancellazione">
+            <strong>{{ conteggi().cancellazioni }}</strong> richieste di cancellazione
+          </button>
+        }
       </div>
 
       @if (error()) { <div class="alert alert-error">{{ error() }}</div> }
@@ -81,7 +87,7 @@ const siNo = (v: boolean | null | undefined) => (v == null ? '—' : v ? 'Sì' :
 
       <app-data-table
         [columns]="columns"
-        [rows]="iscritti()"
+        [rows]="righe()"
         [actions]="azioni"
         [initialSort]="{ key: 'cognome', dir: 'asc' }"
         searchPlaceholder="Cerca per nome, genitore, email, username…"
@@ -102,6 +108,14 @@ const siNo = (v: boolean | null | undefined) => (v == null ? '—' : v ? 'Sì' :
             <h2>{{ d.nomeFiglio }} {{ d.cognomeFiglio }} <small>({{ d.username }})</small></h2>
             <button class="link" (click)="chiudiDettaglio()">Chiudi</button>
           </div>
+          @if (d.cancellazioneRichiesta) {
+            <div class="alert alert-error richiesta">
+              <strong>Richiesta di cancellazione</strong> del {{ dataIt(d.cancellazioneRichiesta) }}
+              @if (d.cancellazioneMotivo) { — <em>{{ d.cancellazioneMotivo }}</em> }.
+              Per eseguirla usate <strong>Elimina</strong> nell'elenco (cancella account e tutti i moduli),
+              poi confermate alla famiglia via email.
+            </div>
+          }
           <div class="modifica">
             <span>Modifica:</span>
             <button class="link" [class.on]="modulo() === 'iscrizione'" (click)="apriModulo('iscrizione')">Iscrizione</button>
@@ -184,6 +198,11 @@ const siNo = (v: boolean | null | undefined) => (v == null ? '—' : v ? 'Sì' :
     .btn[disabled] { opacity: .6; cursor: not-allowed; }
     .numeri { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.25rem; }
     .numeri div { background: white; border: 1px solid var(--color-border); border-radius: var(--radius); padding: .5rem .9rem; font-size: .9rem; }
+    .numeri .cancellazioni { background: #fde8e8; border: 1px solid #fca5a5; color: #b91c1c; border-radius: var(--radius);
+                             padding: .5rem .9rem; font: inherit; font-size: .9rem; cursor: pointer; }
+    .numeri .cancellazioni.on { outline: 2px solid #b91c1c; }
+    .numeri .cancellazioni strong { color: #b91c1c; }
+    .richiesta { margin-bottom: 1rem; }
     .numeri strong { color: var(--color-primary-dark); font-size: 1.1rem; }
     .alert-info { background: var(--color-bg-alt); border: 1px solid var(--color-border); word-break: break-all; }
     .link { background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 0 .35rem; font-size: .85rem; }
@@ -216,7 +235,12 @@ export class AdminGrestComponent {
   readonly error = signal('');
   readonly info = signal('');
   readonly siNo = siNo;
+  readonly dataIt = (d: string) => new Date(d).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
   readonly unisci = (...parti: string[]) => parti.map((p) => (p ?? '').trim()).filter(Boolean).join(' · ') || '—';
+
+  readonly soloCancellazioni = signal(false);
+  readonly righe = computed(() =>
+    this.soloCancellazioni() ? this.iscritti().filter((i) => i.cancellazioneRichiesta) : this.iscritti());
 
   readonly conteggi = computed(() => {
     const l = this.iscritti();
@@ -225,6 +249,7 @@ export class AdminGrestComponent {
       iscrizione: l.filter((i) => i.consenso).length,
       autorizzazione: l.filter((i) => i.autorizzazione).length,
       delega: l.filter((i) => i.delega?.delegati?.length).length,
+      cancellazioni: l.filter((i) => i.cancellazioneRichiesta).length,
     };
   });
 
@@ -242,8 +267,9 @@ export class AdminGrestComponent {
       display: (i) => `${i.consenso ? 'I' : '–'} ${i.autorizzazione ? 'A' : '–'} ${i.delega?.delegati?.length ? 'D' : '–'}` },
     { key: 'abilitato', label: 'Abilitato', type: 'badge', value: (i) => !!i.abilitato,
       badgeLabel: (i) => (i.abilitato ? 'Sì' : 'No'), badgeOn: (i) => !!i.abilitato },
-    { key: 'attivo', label: 'Account', type: 'badge', value: (i) => i.attivo,
-      badgeLabel: (i) => (i.attivo ? 'Attivo' : 'Da attivare'), badgeOn: (i) => i.attivo },
+    { key: 'attivo', label: 'Account', type: 'badge', value: (i) => i.attivo && !i.cancellazioneRichiesta,
+      badgeLabel: (i) => (i.cancellazioneRichiesta ? 'Chiede cancellazione' : i.attivo ? 'Attivo' : 'Da attivare'),
+      badgeOn: (i) => i.attivo && !i.cancellazioneRichiesta },
   ];
 
   constructor() {

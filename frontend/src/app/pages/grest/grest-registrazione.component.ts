@@ -44,6 +44,8 @@ import { GrestDatiFamigliaComponent, datiFamigliaVuoti } from './grest-dati-fami
             @if (error()) {
               <div class="alert alert-error">{{ error() }}</div>
             }
+            <p class="privacy">Registrandovi dichiarate di aver letto la <a routerLink="/p/privacy">privacy policy</a>.
+              Potrete chiedere la cancellazione dell'account e dei dati in qualsiasi momento dall'area riservata.</p>
             <div class="actions">
               <button type="submit" class="btn btn-primary" [disabled]="loading() || !f.valid">
                 {{ loading() ? 'Invio in corso…' : 'Registra' }}
@@ -55,7 +57,10 @@ import { GrestDatiFamigliaComponent, datiFamigliaVuoti } from './grest-dati-fami
       </div>
     </div>
   `,
-  styles: [`.form-wide { max-width: 860px; margin: 0 auto; }`],
+  styles: [`
+    .form-wide { max-width: 860px; margin: 0 auto; }
+    .privacy { font-size: .85rem; color: var(--color-text-muted); margin: .5rem 0 0; }
+  `],
 })
 export class GrestRegistrazioneComponent {
   private grest = inject(GrestService);

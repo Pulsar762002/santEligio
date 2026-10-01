@@ -163,9 +163,10 @@ export class GalleriaComponent {
     const it = this.aperto();
     if (!it || it.tipo !== 'video') return null;
     const yt = youtubeId(it.url);
-    if (yt) return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube.com/embed/${yt}?autoplay=1`);
+    // youtube-nocookie / dnt=1: niente cookie di profilazione (vedi privacy policy)
+    if (yt) return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube-nocookie.com/embed/${yt}?autoplay=1`);
     const vi = vimeoId(it.url);
-    if (vi) return this.sanitizer.bypassSecurityTrustResourceUrl(`https://player.vimeo.com/video/${vi}?autoplay=1`);
+    if (vi) return this.sanitizer.bypassSecurityTrustResourceUrl(`https://player.vimeo.com/video/${vi}?autoplay=1&dnt=1`);
     return null; // file diretto → tag <video>
   });
 

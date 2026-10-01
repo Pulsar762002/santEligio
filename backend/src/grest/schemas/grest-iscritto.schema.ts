@@ -122,6 +122,16 @@ export class GrestIscritto {
 
   @Prop({ type: SchemaFactory.createForClass(GrestDelega), default: null })
   delega: GrestDelega | null;
+
+  /**
+   * Richiesta della famiglia di cancellare account e dati (obbligo Google Play per le app
+   * con registrazione). La cancellazione vera la esegue un responsabile da Admin → Grest.
+   */
+  @Prop({ type: Date, default: null })
+  cancellazioneRichiesta: Date | null;
+
+  @Prop({ default: '' })
+  cancellazioneMotivo: string;
 }
 
 export const GrestIscrittoSchema = SchemaFactory.createForClass(GrestIscritto);

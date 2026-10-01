@@ -83,6 +83,14 @@ export class GrestService {
     return this.http.put<{ ok: boolean }>(`${this.url}/me/password`, { attuale, nuova });
   }
 
+  richiediCancellazione(motivo: string) {
+    return this.http.post<GrestIscritto>(`${this.url}/me/cancellazione`, { motivo });
+  }
+
+  annullaCancellazione() {
+    return this.http.delete<GrestIscritto>(`${this.url}/me/cancellazione`);
+  }
+
   scaricaModulo(modulo: ModuloGrest) {
     return this.http.get(`${this.url}/me/moduli/${modulo}`, { responseType: 'blob' });
   }

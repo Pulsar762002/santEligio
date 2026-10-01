@@ -166,6 +166,22 @@ describe('GrestService', () => {
     });
   });
 
+  describe('richiesta di cancellazione', () => {
+    it('records the request once (first date kept) and can be withdrawn', async () => {
+      const prima = new Date('2026-09-01');
+      const doc: any = { cancellazioneRichiesta: null, cancellazioneMotivo: '', save: jest.fn() };
+      model.findById.mockImplementation(() => Object.assign(Promise.resolve(doc), { select: () => ({ lean: () => Promise.resolve(doc) }) }));
+      await service.richiediCancellazione('64b7f0f0f0f0f0f0f0f0f0f0', ' non partecipiamo più ');
+      expect(doc.cancellazioneRichiesta).toBeInstanceOf(Date);
+      expect(doc.cancellazioneMotivo).toBe('non partecipiamo più');
+      doc.cancellazioneRichiesta = prima;
+      await service.richiediCancellazione('64b7f0f0f0f0f0f0f0f0f0f0');
+      expect(doc.cancellazioneRichiesta).toBe(prima);
+      await service.annullaCancellazione('64b7f0f0f0f0f0f0f0f0f0f0');
+      expect(doc.cancellazioneRichiesta).toBeNull();
+    });
+  });
+
   describe('modifiche dei responsabili', () => {
     it('keep the consent given by the family', async () => {
       const doc: any = {

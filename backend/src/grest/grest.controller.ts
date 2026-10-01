@@ -9,7 +9,7 @@ import { RegistrazioneDto } from './dto/registrazione.dto';
 import { IscrizioneDto } from './dto/iscrizione.dto';
 import { AutorizzazioneDto } from './dto/autorizzazione.dto';
 import { DelegaDto } from './dto/delega.dto';
-import { AttivazioneDto, CambioPasswordDto, GrestLoginDto } from './dto/credenziali.dto';
+import { AttivazioneDto, CambioPasswordDto, CancellazioneDto, GrestLoginDto } from './dto/credenziali.dto';
 import { GrestJwtGuard } from './auth/grest-jwt.guard';
 import { GrestUtente } from './auth/grest-jwt.strategy';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -93,6 +93,18 @@ export class GrestController {
   @Put('me/password')
   password(@Req() req: Request, @Body() dto: CambioPasswordDto) {
     return this.grest.cambiaPassword((req.user as GrestUtente).iscrittoId, dto);
+  }
+
+  @UseGuards(GrestJwtGuard)
+  @Post('me/cancellazione')
+  richiediCancellazione(@Req() req: Request, @Body() dto: CancellazioneDto) {
+    return this.grest.richiediCancellazione((req.user as GrestUtente).iscrittoId, dto.motivo);
+  }
+
+  @UseGuards(GrestJwtGuard)
+  @Delete('me/cancellazione')
+  annullaCancellazione(@Req() req: Request) {
+    return this.grest.annullaCancellazione((req.user as GrestUtente).iscrittoId);
   }
 
   @UseGuards(GrestJwtGuard)

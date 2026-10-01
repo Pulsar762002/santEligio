@@ -63,6 +63,9 @@ export interface GrestIscritto extends GrestIscrizione {
   username: string;
   attivo: boolean;
   abilitato?: boolean;
+  /** Data della richiesta di cancellazione account e dati (null = nessuna richiesta). */
+  cancellazioneRichiesta?: string | null;
+  cancellazioneMotivo?: string;
   autorizzazione: GrestAutorizzazione | null;
   delega: GrestDelega | null;
   createdAt?: string;
