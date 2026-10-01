@@ -273,7 +273,19 @@ Same Angular SPA, wrapped natively for Android (and, in future, iOS) via [Capaci
 - `frontend/android/app/build.gradle` has one hand-added block: excludes `kotlin-stdlib-jdk7`/`-jdk8` (pulled in by `cordova-android` 10.1.1), which otherwise collide with the `kotlin-stdlib` 1.8+ that already bundles them — without it, Gradle fails with duplicate-class errors.
 - Backend CORS (`backend/src/main.ts`): the app's WebView calls the API cross-origin, so in production the allow-list includes `https://localhost` and `capacitor://localhost` alongside the real site origins.
 
-Build the app:
+**Release per Google Play (AAB firmato)**, tutto in Docker (sul server non serve Java/SDK):
+
+```bash
+frontend/android/build-release.sh ~/portals/santeligio-backups/android-chiavi
+# → frontend/android/app/build/outputs/bundle/release/app-release.aab
+```
+
+- `build-release.sh`: build web + `cap sync` in `node:22` (Capacitor 8 richiede Node ≥ 22), poi `gradlew bundleRelease` nell'immagine `build.Dockerfile` (JDK 21, SDK 36, build-tools 35/36). Cache Gradle in `~/.android-build`.
+- Firma: `app/build.gradle` legge `keystore.properties` dal percorso in `SANTELIGIO_KEYSTORE_PROPERTIES`. Chiave di caricamento (`upload-keystore.jks`, alias `upload`) e password **fuori da git**, in `~/portals/santeligio-backups/android-chiavi/` (va custodita anche altrove: senza non si pubblicano aggiornamenti). Google Play App Signing tiene la chiave definitiva.
+- Prima di ogni nuova release su Play: aumentare `versionCode` (e `versionName`) in `android/app/build.gradle`.
+- Progetto allineato al template di Capacitor 8: AGP 8.13, Gradle 8.14.3, `compileSdk`/`targetSdk` 36, `minSdk` 24.
+
+Build the app (debug, sviluppo):
 
 ```bash
 cd frontend
