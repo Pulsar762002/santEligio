@@ -53,6 +53,16 @@ describe('AreeService', () => {
     expect(proposte.create.mock.calls[0][0]).toMatchObject({ tipo: 'contenuto', area: 'coro', stato: 'in_attesa', autoreId: 'u1' });
   });
 
+  it('the Contatti page is an area: its responsabile edits the existing page', async () => {
+    pagine.findOneAndUpdate.mockResolvedValue({ slug: 'contatti' });
+    const r = await service.salvaContenuto('contatti', { titolo: 'Contatti', contenuto: '<p>Turni</p>' }, u('responsabile', ['contatti']));
+    expect(r.inAttesa).toBe(false);
+    const [filtro, update] = pagine.findOneAndUpdate.mock.calls[0];
+    expect(filtro).toEqual({ slug: 'contatti' });
+    // sezione/pubblicazione della pagina esistente non vengono toccate ($setOnInsert vale solo se manca)
+    expect(update.$set).toEqual({ titolo: 'Contatti', sottotitolo: '', contenuto: '<p>Turni</p>', immagine: '' });
+  });
+
   it('refuses areas not assigned, unknown areas and the Grest area', async () => {
     await expect(service.salvaContenuto('coro', contenuto, u('responsabile', ['lettori']))).rejects.toBeInstanceOf(ForbiddenException);
     await expect(service.salvaContenuto('boh', contenuto, u('admin'))).rejects.toBeInstanceOf(NotFoundException);

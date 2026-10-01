@@ -1,5 +1,6 @@
 // Aree assegnabili a Responsabili e Contributor: le voci del sottomenu "Organizzazione"
-// (frontend/src/app/shared/navbar/navbar.menu.ts) più il Grest.
+// (frontend/src/app/shared/navbar/navbar.menu.ts), la pagina Contatti (orari e turni
+// della segreteria) e il Grest.
 // La chiave è lo slug della pagina (/p/<slug>) o del gruppo (/gruppi/<area>/<slug>).
 
 export type TipoArea = 'pagina' | 'gruppo' | 'grest';
@@ -28,6 +29,7 @@ export const AREE: Area[] = [
   { chiave: 'movimento-familiare-cristiano', nome: 'Movimento Familiare Cristiano', gruppo: 'Catechesi', tipo: 'pagina' },
   { chiave: 'giardino-di-giada', nome: 'Giardino di Giada', gruppo: 'Catechesi', tipo: 'gruppo' },
   { chiave: 'giovani', nome: 'Giovani', gruppo: 'Catechesi', tipo: 'pagina' },
+  { chiave: 'contatti', nome: 'Contatti (orari e turni segreteria)', gruppo: 'Segreteria', tipo: 'pagina' },
   { chiave: 'grest', nome: 'Grest', gruppo: 'Grest', tipo: 'grest' },
 ];
 

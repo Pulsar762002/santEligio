@@ -148,7 +148,7 @@ I contenuti del vecchio sito (`old/`) sono estratti in `src/seed-data/` (`pagine
 
 ## Ruoli e permessi
 
-- **Ruoli** (`utenti.ruolo`, `backend/src/auth/ruoli.ts`): `admin` (tutto), `responsabile` (pubblica pagina ed eventi delle sue aree, approva i contributor), `contributor` (propone modifiche alle sue aree: diventano `proposte` da approvare), `utente` (login senza pannello). `utenti.aree` = chiavi di `backend/src/aree/aree.registry.ts` (voci di Organizzazione + `grest`); il Grest si assegna solo ai responsabili.
+- **Ruoli** (`utenti.ruolo`, `backend/src/auth/ruoli.ts`): `admin` (tutto), `responsabile` (pubblica pagina ed eventi delle sue aree, approva i contributor), `contributor` (propone modifiche alle sue aree: diventano `proposte` da approvare), `utente` (login senza pannello). `utenti.aree` = chiavi di `backend/src/aree/aree.registry.ts` (voci di Organizzazione + `contatti` (orari/turni segreteria, pagina `/p/contatti`) + `grest`); il Grest si assegna solo ai responsabili.
 - **`JwtAuthGuard` è "solo admin" per default**: le rotte aperte ad altri ruoli usano `@Ruoli(...)` e, se serve, `@PerArea('grest')`. `JwtStrategy` rilegge l'utente dal DB a ogni richiesta (ruolo/aree aggiornati, utenti disattivati bloccati subito).
 - **Aree**: pagina = `pagine.slug` uguale alla chiave (creata al primo salvataggio, sezione `organismi`); `giardino-di-giada` è un `gruppo`. Gli eventi hanno il campo `area`; le API `/api/aree/:area/...` vedono solo quelli dell'area.
 - **Approvazioni**: un contributor che salva crea un documento in `proposte` (`in_attesa`); il sito mostra la versione precedente finché un responsabile dell'area (o un admin) non approva — solo allora la modifica viene applicata. I contributor non eliminano eventi.
