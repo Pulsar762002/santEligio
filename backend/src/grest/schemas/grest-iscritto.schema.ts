@@ -74,6 +74,10 @@ export class GrestIscritto {
   @Prop({ default: false })
   attivo: boolean;
 
+  /** Ammesso al portale quando l'accesso è ristretto (impostazioni.accessoRistretto). */
+  @Prop({ default: false })
+  abilitato: boolean;
+
   /** Token del link di attivazione / reimpostazione password inviato via email. */
   @Prop({ index: true, sparse: true })
   activationToken?: string;

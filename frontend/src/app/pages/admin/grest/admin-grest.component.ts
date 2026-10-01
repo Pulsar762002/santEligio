@@ -1,6 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DataTableComponent, ColumnDef } from '../../../shared/data-table/data-table.component';
+import { GrestModuloIscrizioneComponent } from '../../grest/grest-modulo-iscrizione.component';
+import { GrestModuloAutorizzazioneComponent } from '../../grest/grest-modulo-autorizzazione.component';
+import { GrestModuloDelegaComponent } from '../../grest/grest-modulo-delega.component';
 import { GrestService, salvaFile } from '../../../core/services/grest.service';
 import { GrestImpostazioni, GrestIscritto, ModuloGrest, messaggioErrore } from '../../../core/models/grest.model';
 
@@ -9,7 +12,10 @@ const siNo = (v: boolean | null | undefined) => (v == null ? '—' : v ? 'Sì' :
 @Component({
   selector: 'app-admin-grest',
   standalone: true,
-  imports: [RouterLink, DataTableComponent],
+  imports: [
+    RouterLink, DataTableComponent, GrestModuloIscrizioneComponent, GrestModuloAutorizzazioneComponent,
+    GrestModuloDelegaComponent,
+  ],
   template: `
     <div class="container page-content">
       <div class="head">
@@ -42,6 +48,24 @@ const siNo = (v: boolean | null | undefined) => (v == null ? '—' : v ? 'Sì' :
             {{ imp.iscrizioniAperte ? 'Chiudi le iscrizioni' : 'Apri le iscrizioni' }}
           </button>
         </div>
+        <div class="iscrizioni" [class.aperte]="!imp.accessoRistretto">
+          <div>
+            <h2>Accesso al portale famiglie: {{ imp.accessoRistretto ? 'solo utenti abilitati' : 'tutti' }}</h2>
+            <p>
+              @if (imp.accessoRistretto) {
+                Possono entrare solo le {{ imp.abilitati }} famiglie con "Abilitato" nell'elenco qui sotto;
+                le altre vedono il messaggio "portale momentaneamente aperto solo ad alcune famiglie".
+              } @else {
+                Tutte le famiglie con l'account attivo possono accedere. Con "solo abilitati" entrano solo
+                quelle che abiliti dall'elenco ({{ imp.abilitati }} abilitate ora).
+              }
+            </p>
+          </div>
+          <button class="btn" [class.btn-primary]="imp.accessoRistretto" [class.btn-outline]="!imp.accessoRistretto"
+                  (click)="cambiaAccesso(!imp.accessoRistretto)" [disabled]="salvaImp()">
+            {{ imp.accessoRistretto ? 'Apri a tutti' : 'Solo utenti abilitati' }}
+          </button>
+        </div>
       }
 
       <div class="numeri">
@@ -63,10 +87,11 @@ const siNo = (v: boolean | null | undefined) => (v == null ? '—' : v ? 'Sì' :
         searchPlaceholder="Cerca per nome, genitore, email, username…"
       />
       <ng-template #azioni let-i>
-        <button class="link" (click)="dettaglio.set(dettaglio()?._id === i._id ? null : i)">Dettaglio</button>
+        <button class="link" (click)="apriDettaglio(i)">Dettaglio</button>
         <button class="link" (click)="pdf(i, 'iscrizione')" [disabled]="!i.consenso">Iscr.</button>
         <button class="link" (click)="pdf(i, 'autorizzazione')" [disabled]="!i.autorizzazione">Aut.</button>
         <button class="link" (click)="pdf(i, 'delega')" [disabled]="!i.delega?.delegati?.length">Del.</button>
+        <button class="link" (click)="abilita(i, !i.abilitato)">{{ i.abilitato ? 'Disabilita' : 'Abilita' }}</button>
         <button class="link" (click)="linkPassword(i)">Link password</button>
         <button class="link danger" (click)="elimina(i)">Elimina</button>
       </ng-template>
@@ -75,8 +100,29 @@ const siNo = (v: boolean | null | undefined) => (v == null ? '—' : v ? 'Sì' :
         <div class="card dettaglio">
           <div class="dettaglio-head">
             <h2>{{ d.nomeFiglio }} {{ d.cognomeFiglio }} <small>({{ d.username }})</small></h2>
-            <button class="link" (click)="dettaglio.set(null)">Chiudi</button>
+            <button class="link" (click)="chiudiDettaglio()">Chiudi</button>
           </div>
+          <div class="modifica">
+            <span>Modifica:</span>
+            <button class="link" [class.on]="modulo() === 'iscrizione'" (click)="apriModulo('iscrizione')">Iscrizione</button>
+            <button class="link" [class.on]="modulo() === 'autorizzazione'" (click)="apriModulo('autorizzazione')"
+                    [disabled]="!d.autorizzazione">Autorizzazione</button>
+            <button class="link" [class.on]="modulo() === 'delega'" (click)="apriModulo('delega')"
+                    [disabled]="!d.delega">Delega</button>
+            <small>Le dichiarazioni di consenso restano quelle firmate dalla famiglia.</small>
+          </div>
+          @switch (modulo()) {
+            @case ('iscrizione') {
+              <app-grest-modulo-iscrizione [iscritto]="d" [admin]="true" (salvato)="aggiornato($event)" />
+            }
+            @case ('autorizzazione') {
+              <app-grest-modulo-autorizzazione [iscritto]="d" [admin]="true" (salvato)="aggiornato($event)" />
+            }
+            @case ('delega') {
+              <app-grest-modulo-delega [iscritto]="d" [admin]="true" (salvato)="aggiornato($event)" />
+            }
+          }
+          @if (!modulo()) {
           <div class="colonne">
             <section>
               <h3>Iscrizione</h3>
@@ -117,6 +163,7 @@ const siNo = (v: boolean | null | undefined) => (v == null ? '—' : v ? 'Sì' :
               } @else { <p class="empty">Non compilata.</p> }
             </section>
           </div>
+          }
         </div>
       }
     </div>
@@ -144,6 +191,10 @@ const siNo = (v: boolean | null | undefined) => (v == null ? '—' : v ? 'Sì' :
     .link[disabled] { color: var(--color-text-muted); opacity: .5; cursor: default; }
     .link.danger { color: #b91c1c; }
     .dettaglio { margin-top: 1.5rem; background: white; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; }
+    .modifica { display: flex; gap: .25rem .5rem; align-items: center; flex-wrap: wrap; margin: -.25rem 0 1.25rem;
+                padding-bottom: .75rem; border-bottom: 1px solid var(--color-border); font-size: .9rem; }
+    .modifica .on { font-weight: 700; text-decoration: underline; }
+    .modifica small { color: var(--color-text-muted); flex-basis: 100%; }
     .dettaglio-head { display: flex; justify-content: space-between; align-items: baseline; }
     .dettaglio h2 { margin: 0 0 1rem; font-size: 1.2rem; }
     .dettaglio h2 small { color: var(--color-text-muted); font-weight: 400; }
@@ -189,6 +240,8 @@ export class AdminGrestComponent {
     { key: 'moduli', label: 'Moduli', filterable: false,
       value: (i) => Number(!!i.consenso) + Number(!!i.autorizzazione) + Number(!!i.delega?.delegati?.length),
       display: (i) => `${i.consenso ? 'I' : '–'} ${i.autorizzazione ? 'A' : '–'} ${i.delega?.delegati?.length ? 'D' : '–'}` },
+    { key: 'abilitato', label: 'Abilitato', type: 'badge', value: (i) => !!i.abilitato,
+      badgeLabel: (i) => (i.abilitato ? 'Sì' : 'No'), badgeOn: (i) => !!i.abilitato },
     { key: 'attivo', label: 'Account', type: 'badge', value: (i) => i.attivo,
       badgeLabel: (i) => (i.attivo ? 'Attivo' : 'Da attivare'), badgeOn: (i) => i.attivo },
   ];
@@ -204,15 +257,62 @@ export class AdminGrestComponent {
     if (!confirm(msg)) return;
     this.salvaImp.set(true);
     this.error.set('');
-    this.grest.salvaImpostazioni(aperte).subscribe({
+    this.salva({ iscrizioniAperte: aperte });
+  }
+
+  cambiaAccesso(ristretto: boolean): void {
+    const msg = ristretto
+      ? `Limitare l'accesso al portale alle sole famiglie abilitate (${this.impostazioni()?.abilitati ?? 0})? Le altre verranno disconnesse.`
+      : 'Riaprire il portale a tutte le famiglie?';
+    if (!confirm(msg)) return;
+    this.salva({ accessoRistretto: ristretto });
+  }
+
+  private salva(imp: { iscrizioniAperte?: boolean; accessoRistretto?: boolean }): void {
+    this.salvaImp.set(true);
+    this.error.set('');
+    this.grest.salvaImpostazioni(imp).subscribe({
       next: (imp) => {
         this.impostazioni.set(imp);
         this.salvaImp.set(false);
       },
       error: () => {
         this.salvaImp.set(false);
-        this.error.set('Impossibile salvare l\'impostazione delle iscrizioni.');
+        this.error.set('Impossibile salvare l\'impostazione.');
       },
+    });
+  }
+
+  readonly modulo = signal<ModuloGrest | null>(null);
+
+  apriModulo(m: ModuloGrest): void {
+    this.modulo.set(this.modulo() === m ? null : m);
+  }
+
+  apriDettaglio(i: GrestIscritto): void {
+    this.dettaglio.set(this.dettaglio()?._id === i._id ? null : i);
+    this.modulo.set(null);
+  }
+
+  chiudiDettaglio(): void {
+    this.dettaglio.set(null);
+    this.modulo.set(null);
+  }
+
+  /** Dopo una modifica del responsabile: aggiorna dettaglio ed elenco senza ricaricare tutto. */
+  aggiornato(i: GrestIscritto): void {
+    if (this.dettaglio()?._id === i._id) this.dettaglio.set(i);
+    this.iscritti.update((l) => l.map((x) => (x._id === i._id ? i : x)));
+  }
+
+  abilita(i: GrestIscritto, abilitato: boolean): void {
+    this.error.set('');
+    this.grest.impostaAbilitato(i._id, abilitato).subscribe({
+      next: (agg) => {
+        this.aggiornato(agg);
+        this.impostazioni.update((imp) => imp && { ...imp, abilitati: imp.abilitati + (abilitato ? 1 : -1) });
+      },
+      error: () => this.error.set('Operazione non riuscita.'),
     });
   }
 

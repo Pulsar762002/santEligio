@@ -8,6 +8,7 @@ import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { MediaService } from './media.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Ruoli, RUOLI_STAFF } from '../auth/ruoli';
 
 const ALLOWED_MIME = new Set([
   'image/jpeg', 'image/png', 'image/webp', 'application/pdf',
@@ -24,6 +25,9 @@ export class MediaController {
     return this.mediaService.findAll();
   }
 
+  // Upload aperto anche a Responsabili/Contributor (immagini delle pagine/eventi delle aree);
+  // elenco e cancellazione della libreria restano all'admin.
+  @Ruoli(...RUOLI_STAFF)
   @Post()
   @UseInterceptors(
     FileInterceptor('file', {

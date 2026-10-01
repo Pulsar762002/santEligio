@@ -74,10 +74,12 @@ type Risposte = Record<Chiave, boolean | null> & { allergie: string; intolleranz
         }
       </fieldset>
 
-      <label class="check responsabilita">
-        <input type="checkbox" name="consenso" [(ngModel)]="r.consenso" />
-        <span><strong>Sì.</strong> {{ testoResponsabilita }}</span>
-      </label>
+      @if (!admin) {
+        <label class="check responsabilita">
+          <input type="checkbox" name="consenso" [(ngModel)]="r.consenso" />
+          <span><strong>Sì.</strong> {{ testoResponsabilita }}</span>
+        </label>
+      }
 
       @if (error()) { <div class="alert alert-error">{{ error() }}</div> }
       @if (ok()) { <div class="alert alert-ok">{{ ok() }}</div> }
@@ -118,6 +120,8 @@ export class GrestModuloAutorizzazioneComponent implements OnChanges {
   private grest = inject(GrestService);
 
   @Input({ required: true }) iscritto!: GrestIscritto;
+  /** Modalità responsabile Grest: endpoint admin, dichiarazioni di consenso non modificabili. */
+  @Input() admin = false;
   @Output() salvato = new EventEmitter<GrestIscritto>();
 
   readonly dichiarazioni = DICHIARAZIONI;
@@ -155,13 +159,14 @@ export class GrestModuloAutorizzazioneComponent implements OnChanges {
 
   private mancanti(): string | null {
     const tutte = [...DICHIARAZIONI, ...AUTORIZZAZIONI];
-    const senzaRisposta = tutte.find((d) => (d.soloSi ? this.r[d.chiave] !== true : this.r[d.chiave] === null));
+    const senzaRisposta = tutte.find((d) =>
+      d.soloSi ? !this.admin && this.r[d.chiave] !== true : this.r[d.chiave] === null);
     if (senzaRisposta) {
       return senzaRisposta.soloSi
         ? `Confermate con "Sì": «${senzaRisposta.testo.slice(0, 70)}…»`
         : `Rispondete Sì o No a: «${senzaRisposta.testo.slice(0, 70)}…»`;
     }
-    if (!this.r.consenso) return 'La dichiarazione di responsabilità genitoriale è obbligatoria.';
+    if (!this.admin && !this.r.consenso) return 'La dichiarazione di responsabilità genitoriale è obbligatoria.';
     return null;
   }
 
@@ -186,9 +191,13 @@ export class GrestModuloAutorizzazioneComponent implements OnChanges {
     };
     this.loading.set(true);
     this.error.set('');
-    this.grest.salvaAutorizzazione(dati).pipe(
+    const { consenso, ...senzaConsenso } = dati;
+    const id = this.iscritto._id;
+    const salva$ = this.admin ? this.grest.salvaAutorizzazioneAdmin(id, senzaConsenso) : this.grest.salvaAutorizzazione(dati);
+    salva$.pipe(
       tap((i) => this.salvato.emit(i)),
-      switchMap(() => (scarica ? this.grest.scaricaModulo('autorizzazione') : of(null))),
+      switchMap(() => (!scarica ? of(null)
+        : this.admin ? this.grest.scaricaModuloAdmin(id, 'autorizzazione') : this.grest.scaricaModulo('autorizzazione'))),
     ).subscribe({
       next: (pdf) => {
         this.loading.set(false);

@@ -122,7 +122,7 @@ export const MENU: MenuEntry[] = [
         children: [
           { label: 'Cenacoli', link: '/p/cenacoli' },
           { label: 'Coro', link: '/p/coro' },
-          { label: 'Decoro e Liturgia', link: '/p/decoro-e-liturgia ' },
+          { label: 'Decoro e Liturgia', link: '/p/decoro-e-liturgia' },
           { label: 'Ministri Straordinari', link: '/p/ministri-straordinari' },
           { label: 'Lettori', link: '/p/lettori' },
         ],

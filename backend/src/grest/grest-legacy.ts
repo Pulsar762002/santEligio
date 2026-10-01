@@ -64,6 +64,7 @@ export function mappaIscritto(
     usernameLower: username.toLowerCase(),
     passwordInChiaro: str(u.password),
     attivo,
+    abilitato: false,
     // Il token serve solo a chi deve ancora attivare l'account: per gli account
     // già attivi un vecchio link non deve poter reimpostare la password.
     activationToken: attivo ? undefined : str(u.activationToken) || undefined,

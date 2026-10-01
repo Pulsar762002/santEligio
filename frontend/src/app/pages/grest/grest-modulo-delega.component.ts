@@ -57,18 +57,20 @@ const vuoto = (): GrestDelegato => ({ nome: '', cognome: '', tipoDocumento: '', 
 
       <div class="alert alert-info">{{ notaConsegna }}</div>
 
-      <label class="check responsabilita">
-        <input type="checkbox" name="consenso" [(ngModel)]="consenso" />
-        <span><strong>Sì.</strong> {{ testoResponsabilita }}</span>
-      </label>
+      @if (!admin) {
+        <label class="check responsabilita">
+          <input type="checkbox" name="consenso" [(ngModel)]="consenso" />
+          <span><strong>Sì.</strong> {{ testoResponsabilita }}</span>
+        </label>
+      }
 
       @if (error()) { <div class="alert alert-error">{{ error() }}</div> }
       @if (ok()) { <div class="alert alert-ok">{{ ok() }}</div> }
 
       <div class="actions">
-        <button type="submit" class="btn btn-outline" [disabled]="loading() || !f.valid || !consenso">Salva</button>
+        <button type="submit" class="btn btn-outline" [disabled]="loading() || !f.valid || (!admin && !consenso)">Salva</button>
         <button type="button" class="btn btn-primary" (click)="salva(true)"
-                [disabled]="loading() || !f.valid || !consenso">
+                [disabled]="loading() || !f.valid || (!admin && !consenso)">
           {{ loading() ? 'Attendere…' : 'Salva e scarica il modulo PDF' }}
         </button>
       </div>
@@ -86,6 +88,8 @@ export class GrestModuloDelegaComponent implements OnChanges {
   private grest = inject(GrestService);
 
   @Input({ required: true }) iscritto!: GrestIscritto;
+  /** Modalità responsabile Grest: endpoint admin, dichiarazioni di consenso non modificabili. */
+  @Input() admin = false;
   @Output() salvato = new EventEmitter<GrestIscritto>();
 
   readonly tipi = TIPI_DOCUMENTO;
@@ -123,9 +127,14 @@ export class GrestModuloDelegaComponent implements OnChanges {
     this.loading.set(true);
     this.error.set('');
     this.ok.set('');
-    this.grest.salvaDelega({ delegati: this.delegati, consenso: this.consenso }).pipe(
+    const id = this.iscritto._id;
+    const salva$ = this.admin
+      ? this.grest.salvaDelegaAdmin(id, { delegati: this.delegati })
+      : this.grest.salvaDelega({ delegati: this.delegati, consenso: this.consenso });
+    salva$.pipe(
       tap((i) => this.salvato.emit(i)),
-      switchMap(() => (scarica ? this.grest.scaricaModulo('delega') : of(null))),
+      switchMap(() => (!scarica ? of(null)
+        : this.admin ? this.grest.scaricaModuloAdmin(id, 'delega') : this.grest.scaricaModulo('delega'))),
     ).subscribe({
       next: (pdf) => {
         this.loading.set(false);

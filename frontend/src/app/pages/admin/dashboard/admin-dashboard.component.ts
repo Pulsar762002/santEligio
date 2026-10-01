@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { etichettaRuolo } from '../../../core/models/utente.model';
 
 interface Section {
   label: string;
@@ -8,7 +9,11 @@ interface Section {
   icon: string;
   route: string;
   available: boolean;
+  /** Chi la vede (default: solo admin). */
+  visibile?: (a: AuthService) => boolean;
 }
+
+const tutti = (a: AuthService) => a.isStaff();
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -17,12 +22,15 @@ interface Section {
   template: `
     <div class="container page-content">
       <div class="dashboard-header">
-        <h1>Pannello di Amministrazione</h1>
-        <p class="muted">Gestisci i contenuti del sito.</p>
+        <h1>Pannello di {{ auth.isAdmin() ? 'Amministrazione' : 'gestione' }}</h1>
+        <p class="muted">
+          @if (auth.me(); as me) { Ciao {{ me.nome || me.email }} · {{ ruolo() }}. }
+          {{ auth.isAdmin() ? 'Gestisci i contenuti del sito.' : 'Gestisci i contenuti delle tue aree.' }}
+        </p>
       </div>
 
       <div class="sections-grid">
-        @for (s of sections; track s.route) {
+        @for (s of visibili(); track s.route) {
           @if (s.available) {
             <a [routerLink]="s.route" class="section-card link">
               <div class="section-icon">{{ s.icon }}</div>
@@ -40,6 +48,7 @@ interface Section {
         }
       </div>
 
+      @if (auth.isAdmin()) {
       <div class="quick-links">
         <h2>Azioni rapide</h2>
         <div class="actions">
@@ -48,6 +57,7 @@ interface Section {
           <a routerLink="/orari-messe" class="btn btn-outline">Vedi Orari Messe</a>
         </div>
       </div>
+      }
     </div>
   `,
   styles: [`
@@ -101,7 +111,20 @@ interface Section {
 export class AdminDashboardComponent {
   protected auth = inject(AuthService);
 
+  readonly ruolo = computed(() => etichettaRuolo(this.auth.ruolo() ?? 'utente'));
+
+  readonly visibili = computed(() =>
+    this.sections.filter((s) => (s.visibile ?? ((a: AuthService) => a.isAdmin()))(this.auth)));
+
   readonly sections: Section[] = [
+    { label: 'Le mie aree', description: 'Pagina ed eventi delle aree di cui ti occupi.', icon: 'A', route: '/admin/aree', available: true,
+      visibile: (a) => a.isStaff() && !a.isAdmin() },
+    { label: 'Approvazioni', description: 'Modifiche dei contributor in attesa di approvazione.', icon: '✓', route: '/admin/approvazioni', available: true,
+      visibile: (a) => a.puoApprovare() },
+    { label: 'Le mie proposte', description: 'Stato delle modifiche che hai inviato in approvazione.', icon: '✓', route: '/admin/approvazioni', available: true,
+      visibile: (a) => a.ruolo() === 'contributor' },
+    { label: 'Utenti', description: 'Account, ruoli e aree di Responsabili e Contributor.', icon: 'U', route: '/admin/utenti', available: true },
+    { label: 'Aree', description: 'Pagine ed eventi delle voci di Organizzazione.', icon: 'A', route: '/admin/aree', available: true },
     { label: 'Eventi', description: 'Crea e aggiorna gli eventi in calendario.', icon: 'E', route: '/admin/eventi', available: true },
     { label: 'Notizie', description: 'Pubblica e gestisci le notizie parrocchiali.', icon: 'N', route: '/admin/news', available: true },
     { label: 'Orari Messe', description: 'Modifica gli orari delle celebrazioni.', icon: 'M', route: '/admin/orari-messe', available: true },
@@ -109,7 +132,9 @@ export class AdminDashboardComponent {
     { label: 'Stradario', description: 'Gestisci le vie del territorio per contrada.', icon: 'S', route: '/admin/stradario', available: true },
     { label: 'Pagine', description: 'Crea e modifica le pagine di contenuto del sito.', icon: 'P', route: '/admin/pagine', available: true },
     { label: 'Galleria', description: 'Categorie, foto e video della galleria.', icon: 'G', route: '/admin/galleria', available: true },
-    { label: 'Grest', description: 'Iscritti, moduli PDF, export CSV e link password delle famiglie.', icon: 'R', route: '/admin/grest', available: true },
+    { label: 'Grest', description: 'Iscritti, moduli PDF, export CSV e link password delle famiglie.', icon: 'R', route: '/admin/grest', available: true,
+      visibile: (a) => a.puoGestireGrest() },
     { label: 'Calendario Attività', description: 'Genera e gestisci il calendario mensile delle attività.', icon: 'C', route: '/admin/calendario', available: true },
+    { label: 'Il mio profilo', description: 'Nome, ruolo e cambio password.', icon: 'P', route: '/profilo', available: true, visibile: tutti },
   ];
 }

@@ -59,7 +59,7 @@ npm run seed:contenuti  # runs node dist/seed-contenuti → carica pagine/gruppi
 ```
 
 Mongoose collection names are pinned explicitly via `@Schema({ collection: ... })`
-(`utenti`, `eventi`, `orari_messe`, `news`, `pagine`, `gruppi`, `intenzioni_preghiera`, `calendario_attivita`, `calendario_intestazioni`, `grest_iscritti`, `grest_impostazioni`) so they match the validators and indexes
+(`utenti`, `eventi`, `orari_messe`, `news`, `pagine`, `gruppi`, `intenzioni_preghiera`, `calendario_attivita`, `calendario_intestazioni`, `grest_iscritti`, `grest_impostazioni`, `proposte`) so they match the validators and indexes
 declared in `mongo-init/01-init.js`. Do not rely on Mongoose's default pluralization.
 
 ## Local dev URLs
@@ -107,15 +107,17 @@ The `news` collection uses `categoria` enum: `liturgia | catechismo | caritas | 
 
 ### NestJS modules and API
 
-All routes are prefixed with `/api`. GET endpoints are public; write operations require `Authorization: Bearer <token>`.
+All routes are prefixed with `/api`. GET endpoints are public; write operations require `Authorization: Bearer <token>` **and the admin role** unless the route says otherwise (see **Ruoli e permessi**).
 
 | Module | Routes |
 |---|---|
-| `auth` | `POST /api/auth/login` → `{ access_token }` |
+| `auth` | `POST /api/auth/login` → `{ access_token }`; `GET /api/auth/me` (profilo: ruolo, aree), `PUT /api/auth/password` (qualsiasi ruolo) |
+| `utenti` | solo admin: `GET/POST /api/utenti`, `PATCH/DELETE /api/utenti/:id`, `PUT /api/utenti/:id/password`, `GET /api/utenti/aree` |
+| `aree` | staff: `GET /api/aree` (le mie aree), `GET|PUT /api/aree/:area/contenuto`, `GET|POST /api/aree/:area/eventi`, `PATCH|DELETE /api/aree/:area/eventi/:id`; `GET /api/proposte[?stato=]`, `POST /api/proposte/:id/{approva|rifiuta}` (admin/responsabile) |
 | `news` | `GET /api/news[?categoria=&tutti=true]`, `GET /api/news/:id`, `POST/PATCH/DELETE` (JWT) |
 | `eventi` | `GET /api/eventi[?tutti=true]`, `GET /api/eventi/prossimi[?limit=5]`, `GET /api/eventi/:id`, `POST/PATCH/DELETE` (JWT) |
 | `orari-messe` | `GET /api/orari-messe[?tipo=feriale\|festiva\|prefestiva]`, `GET /api/orari-messe/:id`, `POST/PATCH/DELETE` (JWT) |
-| `media` | `POST /api/media` (JWT, multipart `file` field) → record Media `{ url, ... }`, `GET /api/media` (JWT), `DELETE /api/media/:id` (JWT) — libreria file; ogni upload è tracciato nella collection `media` e cancellabile (rimuove anche il file dal disco) |
+| `media` | `POST /api/media` (JWT staff: admin/responsabile/contributor, multipart `file` field) → record Media `{ url, ... }`, `GET /api/media` (JWT), `DELETE /api/media/:id` (JWT) — libreria file; ogni upload è tracciato nella collection `media` e cancellabile (rimuove anche il file dal disco) |
 | `stradario` | `GET /api/stradario` (pubblico) — vie del territorio per contrada (collection `stradario`, seed-managed); reso da `/p/stradario` |
 | `galleria` | `GET /api/galleria/categorie`, `GET /api/galleria[?categoria=]` (pubblici); `POST/PATCH/DELETE /api/galleria/categorie[/:id]` e `POST/PATCH/DELETE /api/galleria[/:id]` (JWT) — categorie + item foto/video (collections `galleria_categorie`, `galleria`); eliminando una categoria si cancellano i suoi item. Reso da `/galleria` |
 | `pagine` | `GET /api/pagine[?sezione=&tutte=true]`, `GET /api/pagine/:slug`, `POST/PATCH/DELETE` (JWT) — contenuti statici |
@@ -144,6 +146,15 @@ I contenuti del vecchio sito (`old/`) sono estratti in `src/seed-data/` (`pagine
 | `UPLOAD_MAX_SIZE_MB` | Backend file upload limit |
 
 
+## Ruoli e permessi
+
+- **Ruoli** (`utenti.ruolo`, `backend/src/auth/ruoli.ts`): `admin` (tutto), `responsabile` (pubblica pagina ed eventi delle sue aree, approva i contributor), `contributor` (propone modifiche alle sue aree: diventano `proposte` da approvare), `utente` (login senza pannello). `utenti.aree` = chiavi di `backend/src/aree/aree.registry.ts` (voci di Organizzazione + `grest`); il Grest si assegna solo ai responsabili.
+- **`JwtAuthGuard` è "solo admin" per default**: le rotte aperte ad altri ruoli usano `@Ruoli(...)` e, se serve, `@PerArea('grest')`. `JwtStrategy` rilegge l'utente dal DB a ogni richiesta (ruolo/aree aggiornati, utenti disattivati bloccati subito).
+- **Aree**: pagina = `pagine.slug` uguale alla chiave (creata al primo salvataggio, sezione `organismi`); `giardino-di-giada` è un `gruppo`. Gli eventi hanno il campo `area`; le API `/api/aree/:area/...` vedono solo quelli dell'area.
+- **Approvazioni**: un contributor che salva crea un documento in `proposte` (`in_attesa`); il sito mostra la versione precedente finché un responsabile dell'area (o un admin) non approva — solo allora la modifica viene applicata. I contributor non eliminano eventi.
+- Nessun admin può togliersi il ruolo o eliminarsi e deve restare sempre almeno un admin attivo. `npm run seed` crea l'admin iniziale.
+- **Frontend**: `AuthService.me()` (da `/auth/me`) con `isAdmin/isStaff/puoGestireGrest/puoApprovare`; guard `adminGuard` (solo admin), `staffGuard` (pannello), `grestAdminGuard`, `loggatoGuard`. Pagine `/admin/utenti`, `/admin/aree`, `/admin/aree/:area`, `/admin/approvazioni`, `/profilo`.
+
 ## Grest (iscrizioni famiglie)
 
 Portato dal vecchio portale Express+SQLite (`~/portals/grest` sul server) dentro questo progetto.
@@ -154,6 +165,8 @@ Portato dal vecchio portale Express+SQLite (`~/portals/grest` sul server) dentro
 - **PDF**: i valori dei segnaposto `{{...}}` si leggono dal DB (mai dal client), si compila il `content.xml` dei template `backend/assets/grest/<modulo>_<GREST_ANNO>.odt` e si converte con il servizio **`gotenberg`** (LibreOffice, solo rete interna). Logica di sostituzione = vecchio `generatePDF`, con escape XML.
 - **Import dal vecchio DB**: `npm run seed:grest -- export.json` (JSON `{users, autorizzazioni, deleghe}` da `sqlite3 -json`); idempotente su `legacyId`, cifra le vecchie password in chiaro, alla fine riconfronta ogni campo.
 - **Frontend**: `/grest/accedi`, `/grest/registrazione`, `/grest/attivazione?token=`, `/grest/area` (`grestGuard`), `/admin/grest`; il riquadro di accesso compare sotto la pagina CMS `/p/grest` (`GrestCtaComponent`). `authInterceptor` manda il token Grest alle chiamate `/grest/` (non `/grest/admin/`) e il token admin a tutto il resto.
+- **Gestione**: `/admin/grest` è aperta ad admin e responsabili con area `grest` (`@Ruoli('admin','responsabile') @PerArea('grest')`); i responsabili possono modificare iscrizione/autorizzazione/delega (`PUT /api/grest/admin/iscritti/:id/{iscrizione|autorizzazione|delega}`) ma non le dichiarazioni di consenso della famiglia.
+- **Accesso ristretto**: `grest_impostazioni.accessoRistretto` + `grest_iscritti.abilitato` (`PATCH /api/grest/admin/iscritti/:id/abilitato`): se attivo entrano solo gli abilitati; `GrestJwtStrategy` ricontrolla a ogni richiesta.
 - **Apertura iscrizioni**: interruttore in `/admin/grest`, salvato nella collection `grest_impostazioni` (documento unico `chiave: 'grest'`); finché l'admin non lo usa vale `GREST_ISCRIZIONI_APERTE`. Il limite `GREST_MAX_ISCRITTI` blocca comunque.
 - **Nuova edizione**: aggiornare i template ODT in `backend/assets/grest/`, `GREST_ANNO`, `GREST_MAX_ISCRITTI` e i testi legati all'anno in `frontend/src/app/core/models/grest.model.ts` (`TESTO_USCITA1`, `NOTA_CONSEGNA_DELEGA`).
 
@@ -223,7 +236,11 @@ Il server deve avere già `.env` e `nginx/ssl/` configurati — il deploy fa sol
 | `/admin` | `AdminDashboardComponent` — protected by `authGuard` |
 | `/admin/calendario` | `AdminCalendarioComponent` — genera/gestisce il calendario mensile delle attività (protected) |
 | `/grest/accedi`, `/grest/registrazione`, `/grest/attivazione`, `/grest/area` | Portale famiglie Grest (vedi sezione Grest) |
-| `/admin/grest` | `AdminGrestComponent` — iscritti Grest, PDF, CSV, link password (protected) |
+| `/admin/grest` | `AdminGrestComponent` — iscritti Grest, PDF, CSV, link password, accesso/abilitazioni, modifica dati (admin + responsabili Grest) |
+| `/admin/utenti` | `AdminUtentiComponent` — utenti, ruoli e aree (solo admin) |
+| `/admin/aree`, `/admin/aree/:area` | aree assegnate: pagina ed eventi (staff) |
+| `/admin/approvazioni` | proposte dei contributor da approvare / stato delle proprie (staff) |
+| `/profilo` | profilo e cambio password (qualsiasi utente collegato) |
 
 ## Backend conventions (NestJS)
 
@@ -238,7 +255,7 @@ Il server deve avere già `.env` e `nginx/ssl/` configurati — il deploy fa sol
 
 - Jest (`*.spec.ts` next to the file under test); run with `npm test`. Requires `@types/jest` (in devDependencies).
 - Unit/smoke tests only — Mongoose models and other deps are mocked (`getModelToken`, `useValue`), so **no MongoDB is needed** and the suite runs in seconds. The CI `backend` job runs it on every push/PR.
-- Covered: `auth`, `news`, `eventi`, `orari-messe`, `calendario-attivita`, `calendario-intestazioni` (services + controllers). `media` upload is left uncovered (pure Multer config).
+- Covered: `auth` (incl. ruoli in `JwtAuthGuard`), `utenti`, `aree` (approvazioni), `grest`, `news`, `eventi`, `orari-messe`, `calendario-attivita`, `calendario-intestazioni` (services + controllers). `media` upload is left uncovered (pure Multer config).
 - Pattern: build the testing module with `Test.createTestingModule`, inject mocked collaborators, assert the query filter/sort passed to the model and that `NotFoundException` is thrown on missing ids.
 
 ## Mobile app (Capacitor)

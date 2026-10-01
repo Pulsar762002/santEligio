@@ -80,20 +80,22 @@ function daIscritto(i: GrestIscritto): GrestIscrizione {
         </label>
       </fieldset>
 
-      <label class="check responsabilita">
-        <input type="checkbox" name="consenso" [(ngModel)]="dati.consenso" required />
-        <span><strong>Sì.</strong> {{ testoResponsabilita }}</span>
-      </label>
+      @if (!admin) {
+        <label class="check responsabilita">
+          <input type="checkbox" name="consenso" [(ngModel)]="dati.consenso" required />
+          <span><strong>Sì.</strong> {{ testoResponsabilita }}</span>
+        </label>
+      }
 
       @if (error()) { <div class="alert alert-error">{{ error() }}</div> }
       @if (ok()) { <div class="alert alert-ok">{{ ok() }}</div> }
 
       <div class="actions">
-        <button type="submit" class="btn btn-outline" [disabled]="loading() || !f.valid || !dati.consenso">
+        <button type="submit" class="btn btn-outline" [disabled]="loading() || !f.valid || (!admin && !dati.consenso)">
           Salva
         </button>
         <button type="button" class="btn btn-primary" (click)="salva(true)"
-                [disabled]="loading() || !f.valid || !dati.consenso">
+                [disabled]="loading() || !f.valid || (!admin && !dati.consenso)">
           {{ loading() ? 'Attendere…' : 'Salva e scarica il modulo PDF' }}
         </button>
       </div>
@@ -105,6 +107,8 @@ export class GrestModuloIscrizioneComponent implements OnChanges {
   private grest = inject(GrestService);
 
   @Input({ required: true }) iscritto!: GrestIscritto;
+  /** Modalità responsabile Grest: endpoint admin, dichiarazioni di consenso non modificabili. */
+  @Input() admin = false;
   @Output() salvato = new EventEmitter<GrestIscritto>();
 
   readonly anni = ANNI_CATECHISMO;
@@ -131,9 +135,13 @@ export class GrestModuloIscrizioneComponent implements OnChanges {
     this.loading.set(true);
     this.error.set('');
     this.ok.set('');
-    this.grest.salvaIscrizione(this.dati).pipe(
+    const { consenso, ...senzaConsenso } = this.dati;
+    const id = this.iscritto._id;
+    const salva$ = this.admin ? this.grest.salvaIscrizioneAdmin(id, senzaConsenso) : this.grest.salvaIscrizione(this.dati);
+    salva$.pipe(
       tap((i) => this.salvato.emit(i)),
-      switchMap(() => (scarica ? this.grest.scaricaModulo('iscrizione') : of(null))),
+      switchMap(() => (!scarica ? of(null)
+        : this.admin ? this.grest.scaricaModuloAdmin(id, 'iscrizione') : this.grest.scaricaModulo('iscrizione'))),
     ).subscribe({
       next: (pdf) => {
         this.loading.set(false);

@@ -62,6 +62,7 @@ export interface GrestIscritto extends GrestIscrizione {
   legacyId?: number;
   username: string;
   attivo: boolean;
+  abilitato?: boolean;
   autorizzazione: GrestAutorizzazione | null;
   delega: GrestDelega | null;
   createdAt?: string;
@@ -76,6 +77,9 @@ export interface GrestStato {
 
 export interface GrestImpostazioni {
   iscrizioniAperte: boolean;
+  /** true = accedono al portale solo gli iscritti abilitati */
+  accessoRistretto: boolean;
+  abilitati: number;
   /** 'admin' = scelta salvata dal pannello, 'env' = valore iniziale da .env */
   fonte: 'admin' | 'env';
   iscritti: number;

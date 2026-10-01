@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsBoolean, IsDateString, MaxLength } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsDateString, IsIn, MaxLength } from 'class-validator';
+import { CHIAVI_AREE } from '../../aree/aree.registry';
 
 export class CreateEventoDto {
   @IsString()
@@ -27,4 +28,8 @@ export class CreateEventoDto {
   @IsOptional()
   @IsBoolean()
   pubblicato?: boolean;
+
+  @IsOptional()
+  @IsIn(CHIAVI_AREE)
+  area?: string;
 }

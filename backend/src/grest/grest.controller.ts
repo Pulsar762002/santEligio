@@ -1,5 +1,5 @@
 import {
-  Body, Controller, Delete, Get, Header, Param, ParseEnumPipe, Post, Put, Query, Req, Res, StreamableFile,
+  Body, Controller, Delete, Get, Header, Param, ParseEnumPipe, Patch, Post, Put, Query, Req, Res, StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
@@ -15,7 +15,9 @@ import { GrestUtente } from './auth/grest-jwt.strategy';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { MODULI, ModuloGrest } from './grest.constants';
 import { iscrittiCsv } from './grest-csv';
-import { ImpostazioniDto } from './dto/impostazioni.dto';
+import { AbilitatoDto, ImpostazioniDto } from './dto/impostazioni.dto';
+import { AutorizzazioneAdminDto, DelegaAdminDto, IscrizioneAdminDto } from './dto/admin.dto';
+import { PerArea, Ruoli } from '../auth/ruoli';
 
 const moduloPipe = new ParseEnumPipe(Object.fromEntries(MODULI.map((m) => [m, m])));
 
@@ -105,8 +107,10 @@ export class GrestController {
   }
 }
 
-// ── Amministrazione (token admin del portale): /api/grest/admin/... ──
+// ── Amministrazione: admin del portale e Responsabili con l'area "grest" ──
 @UseGuards(JwtAuthGuard)
+@Ruoli('admin', 'responsabile')
+@PerArea('grest')
 @Controller('grest/admin')
 export class GrestAdminController {
   constructor(
@@ -154,6 +158,26 @@ export class GrestAdminController {
     const iscritto = await this.grest.perModulo(id, modulo);
     const nome = `${modulo}_${iscritto.cognomeFiglio}_${iscritto.nomeFiglio}.pdf`.replace(/[^\w.-]+/g, '_');
     return pdf(res, await this.pdfService.genera(modulo, iscritto), nome);
+  }
+
+  @Patch('iscritti/:id/abilitato')
+  abilitato(@Param('id') id: string, @Body() dto: AbilitatoDto) {
+    return this.grest.impostaAbilitato(id, dto.abilitato);
+  }
+
+  @Put('iscritti/:id/iscrizione')
+  iscrizione(@Param('id') id: string, @Body() dto: IscrizioneAdminDto) {
+    return this.grest.aggiornaIscrizioneAdmin(id, dto);
+  }
+
+  @Put('iscritti/:id/autorizzazione')
+  autorizzazione(@Param('id') id: string, @Body() dto: AutorizzazioneAdminDto) {
+    return this.grest.aggiornaAutorizzazioneAdmin(id, dto);
+  }
+
+  @Put('iscritti/:id/delega')
+  delega(@Param('id') id: string, @Body() dto: DelegaAdminDto) {
+    return this.grest.aggiornaDelegaAdmin(id, dto);
   }
 
   @Post('iscritti/:id/link-password')

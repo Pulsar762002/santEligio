@@ -7,6 +7,7 @@ import { UploadsService } from '../../../core/services/uploads.service';
 import { Evento } from '../../../core/models/evento.model';
 import { assetUrl } from '../../../core/utils/asset-url';
 import { DataTableComponent, ColumnDef } from '../../../shared/data-table/data-table.component';
+import { isoToLocalInput, localInputToIso } from '../../../core/utils/date-input';
 
 interface EventoForm {
   titolo: string;
@@ -20,20 +21,6 @@ interface EventoForm {
 
 function emptyForm(): EventoForm {
   return { titolo: '', descrizione: '', dataInizio: '', dataFine: '', luogo: '', immagine: '', pubblicato: false };
-}
-
-// ISO (dal backend) -> valore per <input type="datetime-local"> in ora locale
-function isoToLocalInput(iso?: string): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '';
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-// datetime-local -> ISO string per il backend (IsDateString)
-function localInputToIso(value: string): string {
-  return value ? new Date(value).toISOString() : '';
 }
 
 @Component({

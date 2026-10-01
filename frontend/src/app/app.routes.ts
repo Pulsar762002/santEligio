@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { adminGuard } from './core/guards/admin.guard';
+import { adminGuard, grestAdminGuard, loggatoGuard, staffGuard } from './core/guards/admin.guard';
 import { grestGuard } from './core/guards/grest.guard';
 
 export const routes: Routes = [
@@ -61,7 +61,7 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    canActivate: [adminGuard],
+    canActivate: [staffGuard],
     loadComponent: () => import('./pages/admin/dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
   },
   {
@@ -128,8 +128,33 @@ export const routes: Routes = [
   { path: 'grest', redirectTo: 'grest/accedi', pathMatch: 'full' },
   {
     path: 'admin/grest',
-    canActivate: [adminGuard],
+    canActivate: [grestAdminGuard],
     loadComponent: () => import('./pages/admin/grest/admin-grest.component').then(m => m.AdminGrestComponent),
+  },
+  {
+    path: 'admin/utenti',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./pages/admin/utenti/admin-utenti.component').then(m => m.AdminUtentiComponent),
+  },
+  {
+    path: 'admin/aree',
+    canActivate: [staffGuard],
+    loadComponent: () => import('./pages/admin/aree/admin-aree.component').then(m => m.AdminAreeComponent),
+  },
+  {
+    path: 'admin/aree/:area',
+    canActivate: [staffGuard],
+    loadComponent: () => import('./pages/admin/aree/admin-area.component').then(m => m.AdminAreaComponent),
+  },
+  {
+    path: 'admin/approvazioni',
+    canActivate: [staffGuard],
+    loadComponent: () => import('./pages/admin/approvazioni/admin-approvazioni.component').then(m => m.AdminApprovazioniComponent),
+  },
+  {
+    path: 'profilo',
+    canActivate: [loggatoGuard],
+    loadComponent: () => import('./pages/profilo/profilo.component').then(m => m.ProfiloComponent),
   },
   { path: '**', redirectTo: '' },
 ];

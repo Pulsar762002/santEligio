@@ -13,6 +13,7 @@ import {
   GrestImpostazioni, GrestImpostazioniDocument, IMPOSTAZIONI_GREST,
 } from './schemas/grest-impostazioni.schema';
 import { ImpostazioniDto } from './dto/impostazioni.dto';
+import { AutorizzazioneAdminDto, DelegaAdminDto, IscrizioneAdminDto } from './dto/admin.dto';
 import { RegistrazioneDto } from './dto/registrazione.dto';
 import { IscrizioneDto } from './dto/iscrizione.dto';
 import { AutorizzazioneDto } from './dto/autorizzazione.dto';
@@ -51,10 +52,26 @@ export class GrestService {
   }
 
   /** Apertura iscrizioni: scelta dell'admin se presente, altrimenti GREST_ISCRIZIONI_APERTE. */
+  private impostazioniSalvate() {
+    return this.impostazioniModel.findOne({ chiave: IMPOSTAZIONI_GREST }).lean();
+  }
+
+  /** Apertura iscrizioni: scelta dell'admin se presente, altrimenti GREST_ISCRIZIONI_APERTE. */
   private async iscrizioniAperte(): Promise<{ aperte: boolean; fonte: 'admin' | 'env' }> {
-    const doc = await this.impostazioniModel.findOne({ chiave: IMPOSTAZIONI_GREST }).lean();
-    if (doc) return { aperte: doc.iscrizioniAperte, fonte: 'admin' };
+    const doc = await this.impostazioniSalvate();
+    if (typeof doc?.iscrizioniAperte === 'boolean') return { aperte: doc.iscrizioniAperte, fonte: 'admin' };
     return { aperte: this.config.get<string>('GREST_ISCRIZIONI_APERTE', 'true') !== 'false', fonte: 'env' };
+  }
+
+  private async accessoRistretto(): Promise<boolean> {
+    return (await this.impostazioniSalvate())?.accessoRistretto === true;
+  }
+
+  /** Account attivo e, se l'accesso è ristretto, abilitato. Usato a ogni richiesta (GrestJwtStrategy). */
+  async puoAccedere(id: string): Promise<boolean> {
+    const i = isValidObjectId(id) ? await this.model.findById(id).select('attivo abilitato').lean() : null;
+    if (!i || !i.attivo) return false;
+    return i.abilitato || !(await this.accessoRistretto());
   }
 
   private nuovoToken(): string {
@@ -141,6 +158,11 @@ export class GrestService {
     const i = await this.model.findOne({ usernameLower: username.trim().toLowerCase() });
     const ok = !!i && i.attivo && !!i.password && (await bcrypt.compare(password, i.password));
     if (!ok) throw new UnauthorizedException('Nome utente o password non corretti.');
+    if (!i.abilitato && (await this.accessoRistretto())) {
+      throw new ForbiddenException(
+        'Il portale Grest è momentaneamente aperto solo ad alcune famiglie. Riprovate più tardi.',
+      );
+    }
     const access_token = this.jwt.sign({ sub: i.id, username: i.username, tipo: 'grest' });
     return { access_token, username: i.username };
   }
@@ -205,22 +227,63 @@ export class GrestService {
   // ── Amministrazione (admin del portale) ───────────────────
 
   async impostazioni() {
-    const { aperte, fonte } = await this.iscrizioniAperte();
-    return {
-      iscrizioniAperte: aperte,
-      fonte,
-      iscritti: await this.model.countDocuments(),
-      maxIscritti: this.maxIscritti,
-    };
+    const [{ aperte, fonte }, accessoRistretto, iscritti, abilitati] = await Promise.all([
+      this.iscrizioniAperte(),
+      this.accessoRistretto(),
+      this.model.countDocuments(),
+      this.model.countDocuments({ abilitato: true }),
+    ]);
+    return { iscrizioniAperte: aperte, fonte, accessoRistretto, abilitati, iscritti, maxIscritti: this.maxIscritti };
   }
 
   async aggiornaImpostazioni(dto: ImpostazioniDto) {
-    await this.impostazioniModel.updateOne(
-      { chiave: IMPOSTAZIONI_GREST },
-      { $set: { iscrizioniAperte: dto.iscrizioniAperte } },
-      { upsert: true },
-    );
+    const set: Record<string, boolean> = {};
+    if (dto.iscrizioniAperte !== undefined) set.iscrizioniAperte = dto.iscrizioniAperte;
+    if (dto.accessoRistretto !== undefined) set.accessoRistretto = dto.accessoRistretto;
+    if (Object.keys(set).length) {
+      await this.impostazioniModel.updateOne({ chiave: IMPOSTAZIONI_GREST }, { $set: set }, { upsert: true });
+    }
     return this.impostazioni();
+  }
+
+  async impostaAbilitato(id: string, abilitato: boolean) {
+    const i = await this.trova(id);
+    i.abilitato = abilitato;
+    await i.save();
+    return this.me(id);
+  }
+
+  // Modifiche dei responsabili ai dati inseriti dalle famiglie: le dichiarazioni di
+  // consenso restano quelle date dalla famiglia (non si possono firmare al posto loro).
+
+  async aggiornaIscrizioneAdmin(id: string, dto: IscrizioneAdminDto) {
+    const i = await this.trova(id);
+    i.set({ ...dto });
+    await i.save();
+    return this.me(id);
+  }
+
+  async aggiornaAutorizzazioneAdmin(id: string, dto: AutorizzazioneAdminDto) {
+    const i = await this.trova(id);
+    if (!i.autorizzazione) {
+      throw new ConflictException("Il modulo di autorizzazione va compilato prima dalla famiglia.");
+    }
+    i.autorizzazione = { ...dto, dichiarazione8: false, autorizzazione5: false, consenso: i.autorizzazione.consenso };
+    await i.save();
+    return this.me(id);
+  }
+
+  async aggiornaDelegaAdmin(id: string, dto: DelegaAdminDto) {
+    const i = await this.trova(id);
+    if (!i.delega) throw new ConflictException('Il modulo di delega va compilato prima dalla famiglia.');
+    i.delega = {
+      delegati: dto.delegati.map(({ nome, cognome, tipoDocumento, numeroDocumento }) => ({
+        nome: nome.trim(), cognome: cognome.trim(), tipoDocumento, numeroDocumento: numeroDocumento.trim(),
+      })),
+      consenso: i.delega.consenso,
+    };
+    await i.save();
+    return this.me(id);
   }
 
   elenco() {

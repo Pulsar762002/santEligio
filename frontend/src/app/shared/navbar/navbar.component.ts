@@ -49,8 +49,10 @@ import { MENU } from './navbar.menu';
               </li>
             }
           }
-          @if (auth.isAdmin()) {
-            <li><a routerLink="/admin" routerLinkActive="active">Admin</a></li>
+          @if (auth.isStaff()) {
+            <li><a routerLink="/admin" routerLinkActive="active">{{ auth.isAdmin() ? 'Admin' : 'Pannello' }}</a></li>
+          } @else if (auth.isLoggedIn()) {
+            <li><a routerLink="/profilo" routerLinkActive="active">Profilo</a></li>
           }
           @if (auth.isLoggedIn()) {
             <li><button class="btn-logout" (click)="logout()">Esci</button></li>

@@ -40,6 +40,7 @@ db.createCollection('eventi', {
         dataFine:   { bsonType: 'date' },
         luogo:      { bsonType: 'string' },
         pubblicato: { bsonType: 'bool' },
+        area:       { bsonType: 'string' },   // area responsabile (aree.registry)
         createdAt:  { bsonType: 'date' },
       },
     },
@@ -57,6 +58,7 @@ db.createCollection('calendario_attivita');
 db.createCollection('calendario_intestazioni');
 db.createCollection('grest_iscritti');   // portale Grest (indici creati dallo schema Mongoose)
 db.createCollection('grest_impostazioni');  // apertura iscrizioni (scelta admin)
+db.createCollection('proposte');   // modifiche dei contributor in attesa di approvazione
 
 // ── Indici ────────────────────────────────────────────────────
 db.news.createIndex({ createdAt: -1 });

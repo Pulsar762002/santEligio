@@ -15,6 +15,7 @@ import { IntenzioniPreghieraModule } from './intenzioni-preghiera/intenzioni-pre
 import { CalendarioAttivitaModule } from './calendario-attivita/calendario-attivita.module';
 import { CalendarioIntestazioniModule } from './calendario-intestazioni/calendario-intestazioni.module';
 import { GrestModule } from './grest/grest.module';
+import { AreeModule } from './aree/aree.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { GrestModule } from './grest/grest.module';
     CalendarioAttivitaModule,
     CalendarioIntestazioniModule,
     GrestModule,
+    AreeModule,
   ],
 })
 export class AppModule {}

@@ -93,8 +93,25 @@ export class GrestService {
     return this.http.get<GrestImpostazioni>(`${this.url}/admin/impostazioni`);
   }
 
-  salvaImpostazioni(iscrizioniAperte: boolean) {
-    return this.http.put<GrestImpostazioni>(`${this.url}/admin/impostazioni`, { iscrizioniAperte });
+  salvaImpostazioni(imp: { iscrizioniAperte?: boolean; accessoRistretto?: boolean }) {
+    return this.http.put<GrestImpostazioni>(`${this.url}/admin/impostazioni`, imp);
+  }
+
+  impostaAbilitato(id: string, abilitato: boolean) {
+    return this.http.patch<GrestIscritto>(`${this.url}/admin/iscritti/${id}/abilitato`, { abilitato });
+  }
+
+  // Modifiche dei responsabili: senza le dichiarazioni di consenso (restano quelle della famiglia).
+  salvaIscrizioneAdmin(id: string, dati: Omit<GrestIscrizione, 'consenso'>) {
+    return this.http.put<GrestIscritto>(`${this.url}/admin/iscritti/${id}/iscrizione`, dati);
+  }
+
+  salvaAutorizzazioneAdmin(id: string, dati: Omit<GrestAutorizzazione, 'consenso'>) {
+    return this.http.put<GrestIscritto>(`${this.url}/admin/iscritti/${id}/autorizzazione`, dati);
+  }
+
+  salvaDelegaAdmin(id: string, dati: Omit<GrestDelega, 'consenso'>) {
+    return this.http.put<GrestIscritto>(`${this.url}/admin/iscritti/${id}/delega`, dati);
   }
 
   elenco() {

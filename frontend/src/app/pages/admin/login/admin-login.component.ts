@@ -10,7 +10,7 @@ import { AuthService } from '../../../core/services/auth.service';
   template: `
     <div class="login-page">
       <div class="login-box">
-        <h1>Accesso Admin</h1>
+        <h1>Accedi</h1>
 
         @if (error()) {
           <div class="alert alert-error">{{ error() }}</div>
@@ -80,7 +80,15 @@ export class AdminLoginComponent {
     this.loading.set(true);
     this.error.set('');
     this.authService.login(this.email, this.password).subscribe({
-      next: () => this.router.navigate(['/admin']),
+      next: (me) => {
+        if (!me) {
+          this.error.set('Accesso non riuscito.');
+          this.loading.set(false);
+          return;
+        }
+        // gli utenti in sola lettura non hanno il pannello
+        this.router.navigate([me.ruolo === 'utente' ? '/' : '/admin']);
+      },
       error: () => {
         this.error.set('Credenziali non valide.');
         this.loading.set(false);

@@ -25,6 +25,10 @@ export class Evento {
 
   @Prop({ default: false })
   pubblicato: boolean;
+
+  /** Area (aree/aree.registry.ts) che gestisce l'evento; assente = solo admin. */
+  @Prop({ index: true, sparse: true })
+  area?: string;
 }
 
 export const EventoSchema = SchemaFactory.createForClass(Evento);

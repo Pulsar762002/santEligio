@@ -119,9 +119,10 @@ describe('GrestService', () => {
   describe('impostazioni', () => {
     it('reports the env value when the admin never chose', async () => {
       config.GREST_ISCRIZIONI_APERTE = 'false';
-      model.countDocuments.mockResolvedValue(195);
+      model.countDocuments.mockImplementation(async (f?: object) => (f ? 3 : 195));
       await expect(service.impostazioni()).resolves.toEqual({
-        iscrizioniAperte: false, fonte: 'env', iscritti: 195, maxIscritti: 196,
+        iscrizioniAperte: false, fonte: 'env', accessoRistretto: false, abilitati: 3,
+        iscritti: 195, maxIscritti: 196,
       });
     });
 
@@ -131,6 +132,61 @@ describe('GrestService', () => {
       expect(impostazioni.updateOne).toHaveBeenCalledWith(
         { chiave: 'grest' }, { $set: { iscrizioniAperte: true } }, { upsert: true },
       );
+    });
+  });
+
+  describe('accesso ristretto', () => {
+    const ristretto = (v: boolean) =>
+      impostazioni.findOne.mockReturnValue({ lean: () => Promise.resolve({ accessoRistretto: v }) });
+
+    it('blocks login of families not enabled, after checking the password', async () => {
+      const password = await bcrypt.hash('segreta', 4);
+      ristretto(true);
+      model.findOne.mockResolvedValue({ id: 'a', username: 'X', attivo: true, abilitato: false, password });
+      await expect(service.login('x', 'segreta')).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(service.login('x', 'sbagliata')).rejects.toBeInstanceOf(UnauthorizedException);
+      model.findOne.mockResolvedValue({ id: 'a', username: 'X', attivo: true, abilitato: true, password });
+      await expect(service.login('x', 'segreta')).resolves.toMatchObject({ username: 'X' });
+    });
+
+    it('puoAccedere re-checks every request', async () => {
+      const iscritto = (o: object) => model.findById.mockReturnValue({ select: () => ({ lean: () => Promise.resolve(o) }) });
+      const id = '64b7f0f0f0f0f0f0f0f0f0f0';
+      ristretto(true);
+      iscritto({ attivo: true, abilitato: false });
+      await expect(service.puoAccedere(id)).resolves.toBe(false);
+      iscritto({ attivo: true, abilitato: true });
+      await expect(service.puoAccedere(id)).resolves.toBe(true);
+      ristretto(false);
+      iscritto({ attivo: true, abilitato: false });
+      await expect(service.puoAccedere(id)).resolves.toBe(true);
+      iscritto({ attivo: false, abilitato: true });
+      await expect(service.puoAccedere(id)).resolves.toBe(false);
+      await expect(service.puoAccedere('non-valido')).resolves.toBe(false);
+    });
+  });
+
+  describe('modifiche dei responsabili', () => {
+    it('keep the consent given by the family', async () => {
+      const doc: any = {
+        autorizzazione: { consenso: true }, save: jest.fn(),
+      };
+      model.findById.mockImplementation((id: string) =>
+        id ? Object.assign(Promise.resolve(doc), { select: () => ({ lean: () => Promise.resolve(doc) }) }) : null);
+      const a = {
+        dichiarazione1: false, dichiarazione2: true, dichiarazione3: false, dichiarazione4: false,
+        dichiarazione5: false, dichiarazione6: true, dichiarazione7: true, allergie: 'latte',
+        intolleranze: '', autorizzazione1: true, autorizzazione2: false, autorizzazione3: true, autorizzazione4: true,
+      };
+      await service.aggiornaAutorizzazioneAdmin('64b7f0f0f0f0f0f0f0f0f0f0', a);
+      expect(doc.autorizzazione).toMatchObject({ ...a, consenso: true, dichiarazione8: false });
+    });
+
+    it('cannot create forms the family never filled', async () => {
+      const doc: any = { autorizzazione: null, delega: null, save: jest.fn() };
+      model.findById.mockResolvedValue(doc);
+      await expect(service.aggiornaDelegaAdmin('64b7f0f0f0f0f0f0f0f0f0f0', { delegati: [] }))
+        .rejects.toBeInstanceOf(ConflictException);
     });
   });
 
