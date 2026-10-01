@@ -81,7 +81,7 @@ export const routes: Routes = [
   },
   {
     path: 'admin/media',
-    canActivate: [adminGuard],
+    canActivate: [staffGuard],
     loadComponent: () => import('./pages/admin/media/admin-media.component').then(m => m.AdminMediaComponent),
   },
   {

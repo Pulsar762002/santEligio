@@ -4,7 +4,8 @@ import { DatePipe } from '@angular/common';
 import { MediaService } from '../../../core/services/media.service';
 import { UploadsService } from '../../../core/services/uploads.service';
 import { Media } from '../../../core/models/media.model';
-import { assetUrl } from '../../../core/utils/asset-url';
+import { assetUrl, assetUrlCompleto } from '../../../core/utils/asset-url';
+import { AuthService } from '../../../core/services/auth.service';
 import { DataTableComponent, ColumnDef } from '../../../shared/data-table/data-table.component';
 
 function formatSize(bytes: number): string {
@@ -54,7 +55,9 @@ function tipoLabel(m: Media): string {
       <ng-template #azioni let-m>
         <button class="link" (click)="copiaUrl(m)">Copia URL</button>
         <a class="link" [href]="src(m.url)" target="_blank" rel="noopener">Apri</a>
-        <button class="link danger" (click)="elimina(m)">Elimina</button>
+        @if (puoEliminare(m)) {
+          <button class="link danger" (click)="elimina(m)">Elimina</button>
+        }
       </ng-template>
 
       <p class="hint">PNG, JPG, WebP, PDF o video MP4/WebM — max {{ maxSizeMb }} MB. I file caricati qui sono
@@ -77,6 +80,12 @@ function tipoLabel(m: Media): string {
 export class AdminMediaComponent {
   private service = inject(MediaService);
   private uploads = inject(UploadsService);
+  private auth = inject(AuthService);
+
+  /** L'admin elimina tutto; gli altri solo i propri file (lo verifica anche il server). */
+  puoEliminare(m: Media): boolean {
+    return this.auth.isAdmin() || (!!m.caricatoDa && m.caricatoDa === this.auth.me()?.userId);
+  }
 
   readonly media = signal<Media[]>([]);
   readonly uploading = signal(false);
@@ -93,6 +102,7 @@ export class AdminMediaComponent {
     { key: 'originalName', label: 'Nome', value: m => m.originalName },
     { key: 'mimetype', label: 'Tipo', value: m => m.mimetype ?? '', display: m => tipoLabel(m) },
     { key: 'size', label: 'Dimensione', type: 'number', value: m => m.size, display: m => formatSize(m.size) },
+    { key: 'caricatoDaNome', label: 'Da', value: m => m.caricatoDaNome ?? '' , display: m => m.caricatoDaNome ?? '—' },
     { key: 'createdAt', label: 'Caricato', type: 'date',
       value: m => (m.createdAt ? new Date(m.createdAt).getTime() : 0),
       display: m => this.dp.transform(m.createdAt, 'd MMM yyyy, HH:mm') ?? '' },
@@ -132,12 +142,15 @@ export class AdminMediaComponent {
   }
 
   copiaUrl(m: Media): void {
-    const url = this.src(m.url);
-    navigator.clipboard?.writeText(url).then(
-      () => { this.info.set('URL copiato negli appunti.'); setTimeout(() => this.info.set(''), 2500); },
-      () => this.error.set('Copia non riuscita.'),
+    const url = assetUrlCompleto(m.url);
+    const manuale = () => this.info.set(`Copia questo indirizzo: ${url}`);
+    if (!navigator.clipboard) return manuale();
+    navigator.clipboard.writeText(url).then(
+      () => { this.info.set(`URL copiato negli appunti: ${url}`); setTimeout(() => this.info.set(''), 4000); },
+      manuale,
     );
   }
+
 
   elimina(m: Media): void {
     if (!confirm(`Eliminare "${m.originalName}"? Il file verrà rimosso dal server.`)) return;

@@ -117,7 +117,7 @@ All routes are prefixed with `/api`. GET endpoints are public; write operations 
 | `news` | `GET /api/news[?categoria=&tutti=true]`, `GET /api/news/:id`, `POST/PATCH/DELETE` (JWT) |
 | `eventi` | `GET /api/eventi[?tutti=true]`, `GET /api/eventi/prossimi[?limit=5]`, `GET /api/eventi/:id`, `POST/PATCH/DELETE` (JWT) |
 | `orari-messe` | `GET /api/orari-messe[?tipo=feriale\|festiva\|prefestiva]`, `GET /api/orari-messe/:id`, `POST/PATCH/DELETE` (JWT) |
-| `media` | `POST /api/media` (JWT staff: admin/responsabile/contributor, multipart `file` field) → record Media `{ url, ... }`, `GET /api/media` (JWT), `DELETE /api/media/:id` (JWT) — libreria file; ogni upload è tracciato nella collection `media` e cancellabile (rimuove anche il file dal disco) |
+| `media` | staff (admin/responsabile/contributor, non gli utenti): `POST /api/media` (multipart `file` field) → record Media `{ url, caricatoDa, ... }`, `GET /api/media`, `DELETE /api/media/:id` (l'admin elimina tutto, gli altri solo i file caricati da loro) — libreria file; ogni upload è tracciato nella collection `media` e cancellabile (rimuove anche il file dal disco) |
 | `stradario` | `GET /api/stradario` (pubblico) — vie del territorio per contrada (collection `stradario`, seed-managed); reso da `/p/stradario` |
 | `galleria` | `GET /api/galleria/categorie`, `GET /api/galleria[?categoria=]` (pubblici); `POST/PATCH/DELETE /api/galleria/categorie[/:id]` e `POST/PATCH/DELETE /api/galleria[/:id]` (JWT) — categorie + item foto/video (collections `galleria_categorie`, `galleria`); eliminando una categoria si cancellano i suoi item. Reso da `/galleria` |
 | `pagine` | `GET /api/pagine[?sezione=&tutte=true]`, `GET /api/pagine/:slug`, `POST/PATCH/DELETE` (JWT) — contenuti statici |

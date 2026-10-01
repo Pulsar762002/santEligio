@@ -19,6 +19,13 @@ export class Media {
 
   @Prop({ default: 0 })
   size: number;
+
+  /** Chi ha caricato il file (assente per i file storici = solo l'admin li elimina). */
+  @Prop()
+  caricatoDa?: string;
+
+  @Prop()
+  caricatoDaNome?: string;
 }
 
 export const MediaSchema = SchemaFactory.createForClass(Media);

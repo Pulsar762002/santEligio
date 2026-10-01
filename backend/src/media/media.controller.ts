@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Delete,
-  Param, UploadedFile, UseGuards, UseInterceptors,
+  Param, Req, UploadedFile, UseGuards, UseInterceptors,
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -8,14 +8,17 @@ import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { MediaService } from './media.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Ruoli, RUOLI_STAFF } from '../auth/ruoli';
+import { Ruoli, RUOLI_STAFF, UtenteAutenticato } from '../auth/ruoli';
+import { Request } from 'express';
 
 const ALLOWED_MIME = new Set([
   'image/jpeg', 'image/png', 'image/webp', 'application/pdf',
   'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime',
 ]);
 
+// Libreria media: Admin, Responsabili e Contributor (non gli Utenti).
 @UseGuards(JwtAuthGuard)
+@Ruoli(...RUOLI_STAFF)
 @Controller('media')
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
@@ -25,9 +28,6 @@ export class MediaController {
     return this.mediaService.findAll();
   }
 
-  // Upload aperto anche a Responsabili/Contributor (immagini delle pagine/eventi delle aree);
-  // elenco e cancellazione della libreria restano all'admin.
-  @Ruoli(...RUOLI_STAFF)
   @Post()
   @UseInterceptors(
     FileInterceptor('file', {
@@ -47,9 +47,12 @@ export class MediaController {
       },
     }),
   )
-  upload(@UploadedFile() file: Express.Multer.File) {
+  upload(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
     if (!file) throw new BadRequestException('Nessun file ricevuto');
+    const u = req.user as UtenteAutenticato;
     return this.mediaService.create({
+      caricatoDa: u.userId,
+      caricatoDaNome: u.nome || u.email,
       originalName: file.originalname,
       filename: file.filename,
       url: `/uploads/${file.filename}`,
@@ -59,7 +62,7 @@ export class MediaController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.mediaService.remove(id);
+  remove(@Param('id') id: string, @Req() req: Request) {
+    return this.mediaService.remove(id, req.user as UtenteAutenticato);
   }
 }
