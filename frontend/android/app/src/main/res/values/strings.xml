@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Parrocchia di Sant\'Eligio</string>
-    <string name="title_activity_main">Parrocchia di Sant\'Eligio</string>
+    <string name="app_name">Sant\'Eligio</string>
+    <string name="title_activity_main">Sant\'Eligio</string>
     <string name="package_name">it.parrocchiasanteligio.app</string>
     <string name="custom_url_scheme">it.parrocchiasanteligio.app</string>
 </resources>

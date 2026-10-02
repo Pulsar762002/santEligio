@@ -4,9 +4,11 @@ Testi pronti da incollare in Play Console → **Presenza nello store → Scheda 
 
 ## Dettagli dell'app
 
-**Nome dell'app** (max 30 caratteri — 25):
+**Nome dell'app** (max 30 caratteri — 29):
 
-    Parrocchia di Sant'Eligio
+    Parrocchia Sant'Eligio - Roma
+
+(Sotto l'icona sul telefono compare invece il nome breve **Sant'Eligio**.)
 
 **Descrizione breve** (max 80 caratteri — 75):
 
