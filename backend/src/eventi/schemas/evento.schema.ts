@@ -26,6 +26,20 @@ export class Evento {
   @Prop({ default: false })
   pubblicato: boolean;
 
+  /** Evento importante: card grande in cima a /eventi e sezione dedicata in home. */
+  @Prop({ default: false })
+  inEvidenza: boolean;
+
+  /**
+   * Periodo di visibilità facoltativo: prima di `visibileDal` e dopo `visibileFino`
+   * l'evento non compare negli elenchi pubblici. Assenti = sempre visibile.
+   */
+  @Prop({ type: Date, default: null })
+  visibileDal: Date | null;
+
+  @Prop({ type: Date, default: null })
+  visibileFino: Date | null;
+
   /**
    * Aree (aree/aree.registry.ts) a cui appartiene l'evento: responsabili e contributor
    * di queste aree lo vedono e lo gestiscono. Vuoto/assente = solo admin (eventi storici).

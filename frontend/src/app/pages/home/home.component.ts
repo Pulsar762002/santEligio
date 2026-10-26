@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -23,11 +23,22 @@ import { EventCardComponent } from '../../shared/event-card/event-card.component
     </section>
 
     <div class="container page-content">
-      @if (eventi().length > 0) {
+      @if (inEvidenza().length > 0) {
+        <section class="section">
+          <h2>In evidenza</h2>
+          <div class="event-list">
+            @for (evento of inEvidenza(); track evento._id) {
+              <app-event-card [evento]="evento" [featured]="true" />
+            }
+          </div>
+        </section>
+      }
+
+      @if (prossimi().length > 0) {
         <section class="section">
           <h2>Prossimi Eventi</h2>
           <div class="event-list">
-            @for (evento of eventi(); track evento._id) {
+            @for (evento of prossimi(); track evento._id) {
               <app-event-card [evento]="evento" [showDescription]="false" />
             }
           </div>
@@ -94,4 +105,7 @@ export class HomeComponent {
 
   readonly news = toSignal(this.newsService.getAll(), { initialValue: [] });
   readonly eventi = toSignal(this.eventiService.getProssimi(3), { initialValue: [] });
+  readonly inEvidenza = toSignal(this.eventiService.getInEvidenza(), { initialValue: [] });
+  // gli eventi in evidenza hanno già la loro sezione: non ripeterli
+  readonly prossimi = computed(() => this.eventi().filter((e) => !e.inEvidenza));
 }

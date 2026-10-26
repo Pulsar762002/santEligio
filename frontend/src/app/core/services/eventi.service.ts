@@ -17,6 +17,10 @@ export class EventiService {
     return this.http.get<Evento[]>(`${this.base}/prossimi`, { params: { limit: String(limit) } });
   }
 
+  getInEvidenza() {
+    return this.http.get<Evento[]>(`${this.base}/in-evidenza`);
+  }
+
   getOne(id: string) {
     return this.http.get<Evento>(`${this.base}/${id}`);
   }

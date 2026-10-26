@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CalendarioAttivitaService, weekdaysFromGiorno } from './calendario-attivita.service';
 import { CalendarioAttivita, FonteAttivita, TipoAttivita } from './schemas/calendario-attivita.schema';
 import { OrarioMessa } from '../orari-messe/schemas/orario-messa.schema';
@@ -33,6 +33,7 @@ describe('CalendarioAttivitaService', () => {
     create: jest.fn(),
     findByIdAndUpdate: jest.fn(),
     findByIdAndDelete: jest.fn(),
+    deleteMany: jest.fn(),
     exists: jest.fn(),
   };
   const orarioModel = { find: jest.fn() };
@@ -171,6 +172,22 @@ describe('CalendarioAttivitaService', () => {
 
       const result = await service.generaMese(2026, 8);
       expect(result).toBe(finalList);
+    });
+  });
+
+  describe('removeMese', () => {
+    it('deletes every entry of the month (same range as findAll) and returns the count', async () => {
+      calendarioModel.deleteMany.mockResolvedValue({ deletedCount: 7 });
+      expect(await service.removeMese(2026, 10)).toEqual({ eliminati: 7 });
+      const filter = calendarioModel.deleteMany.mock.calls[0][0];
+      expect(filter.data.$gte).toEqual(new Date(2026, 9, 1));
+      expect(filter.data.$lt).toEqual(new Date(2026, 10, 1));
+    });
+
+    it('rejects missing or invalid anno/mese without deleting anything', async () => {
+      await expect(service.removeMese(NaN, NaN)).rejects.toBeInstanceOf(BadRequestException);
+      await expect(service.removeMese(2026, 13)).rejects.toBeInstanceOf(BadRequestException);
+      expect(calendarioModel.deleteMany).not.toHaveBeenCalled();
     });
   });
 });

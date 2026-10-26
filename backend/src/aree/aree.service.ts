@@ -11,6 +11,7 @@ import { Gruppo, GruppoDocument } from '../gruppi/schemas/gruppo.schema';
 import { Evento, EventoDocument } from '../eventi/schemas/evento.schema';
 import { CreateEventoDto } from '../eventi/dto/create-evento.dto';
 import { UpdateEventoDto } from '../eventi/dto/update-evento.dto';
+import { verificaDateEvento, verificaDateModifica } from '../eventi/eventi.service';
 import { UtenteAutenticato, haArea } from '../auth/ruoli';
 
 /** Esito di un salvataggio: applicato subito o in attesa di approvazione. */
@@ -167,6 +168,7 @@ export class AreeService {
     } else if (aree.some((a) => !AREE_EVENTI.includes(a))) {
       throw new BadRequestException('Area non valida per gli eventi.');
     }
+    verificaDateEvento(dto);
     const dati = { ...dto, aree };
     if (u.ruolo === 'contributor') {
       const proposta = await this.nuovaProposta(u, { tipo: 'evento', azione: 'crea', aree, titolo: dto.titolo, dati });
@@ -189,6 +191,7 @@ export class AreeService {
         if (!aree.length) throw new BadRequestException("L'evento deve restare associato ad almeno un'area.");
       }
     }
+    verificaDateModifica(e, dto);
     const dati = { ...dto, aree };
     if (u.ruolo === 'contributor') {
       const coinvolte = unici([...attuali, ...aree].filter((a) => u.aree.includes(a)));

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
@@ -93,6 +93,16 @@ export class CalendarioAttivitaService {
   async remove(id: string) {
     const item = await this.calendarioModel.findByIdAndDelete(id);
     if (!item) throw new NotFoundException();
+  }
+
+  /** Elimina tutte le voci del mese (stesso intervallo mostrato da findAll). */
+  async removeMese(anno: number, mese: number) {
+    if (!Number.isInteger(anno) || !Number.isInteger(mese) || mese < 1 || mese > 12) {
+      throw new BadRequestException('Indicare anno e mese validi.');
+    }
+    const { start, end } = this.meseRange(anno, mese);
+    const { deletedCount } = await this.calendarioModel.deleteMany({ data: { $gte: start, $lt: end } });
+    return { eliminati: deletedCount };
   }
 
   async generaMese(anno: number, mese: number) {

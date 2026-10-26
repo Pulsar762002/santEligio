@@ -1,4 +1,4 @@
-import { ArrayMaxSize, IsArray, IsString, IsOptional, IsBoolean, IsDateString, IsIn, MaxLength } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsString, IsOptional, IsBoolean, IsDateString, IsIn, MaxLength, ValidateIf } from 'class-validator';
 import { CHIAVI_AREE } from '../../aree/aree.registry';
 
 export class CreateEventoDto {
@@ -28,6 +28,19 @@ export class CreateEventoDto {
   @IsOptional()
   @IsBoolean()
   pubblicato?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  inEvidenza?: boolean;
+
+  // null = togli il limite (PATCH)
+  @ValidateIf((_, v) => v !== undefined && v !== null)
+  @IsDateString()
+  visibileDal?: string | null;
+
+  @ValidateIf((_, v) => v !== undefined && v !== null)
+  @IsDateString()
+  visibileFino?: string | null;
 
   @IsOptional()
   @IsArray()
