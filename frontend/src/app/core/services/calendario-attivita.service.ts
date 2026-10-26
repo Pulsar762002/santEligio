@@ -30,6 +30,12 @@ export class CalendarioAttivitaService {
     return this.http.delete(`${this.base}/${id}`);
   }
 
+  /** Elimina tutte le voci del mese indicato. */
+  removeMese(anno: number, mese: number) {
+    const params = { anno: String(anno), mese: String(mese) };
+    return this.http.delete<{ eliminati: number }>(this.base, { params });
+  }
+
   genera(anno: number, mese: number) {
     const params = { anno: String(anno), mese: String(mese) };
     return this.http.post<CalendarioAttivita[]>(`${this.base}/genera`, {}, { params });

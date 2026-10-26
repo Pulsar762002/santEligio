@@ -47,6 +47,13 @@ export class CalendarioAttivitaController {
     return this.calendarioAttivitaService.generaMese(a, m);
   }
 
+  // Anno e mese obbligatori (niente default al mese corrente per un'eliminazione massiva).
+  @UseGuards(JwtAuthGuard)
+  @Delete()
+  removeMese(@Query('anno') anno?: string, @Query('mese') mese?: string) {
+    return this.calendarioAttivitaService.removeMese(Number(anno), Number(mese));
+  }
+
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateCalendarioAttivitaDto) {

@@ -46,6 +46,9 @@ function emptyForm(): AttivitaForm {
             <button class="btn btn-outline" (click)="genera()" [disabled]="generando()">
               {{ generando() ? 'Generazione…' : 'Genera dal mese' }}
             </button>
+            <button class="btn btn-danger" (click)="eliminaTutti()" [disabled]="eliminando() || !voci().length">
+              {{ eliminando() ? 'Eliminazione…' : 'Elimina tutte' }}
+            </button>
             <button class="btn btn-primary" (click)="nuovo()">+ Nuovo record</button>
           </div>
         }
@@ -224,6 +227,9 @@ function emptyForm(): AttivitaForm {
     .link { background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 0 .4rem; font-size: .85rem; }
     .link:hover { text-decoration: underline; }
     .link.danger { color: #b91c1c; }
+    .btn-danger { background: white; color: #b91c1c; border: 1px solid #b91c1c; }
+    .btn-danger:hover:not([disabled]) { background: #b91c1c; color: white; }
+    .btn-danger[disabled] { opacity: .5; cursor: not-allowed; }
     .badge.fonte {
       display: inline-block; font-size: .75rem; padding: .15rem .5rem; border-radius: 999px;
       background: var(--color-bg-alt); color: var(--color-text-muted); border: 1px solid var(--color-border);
@@ -241,6 +247,7 @@ export class AdminCalendarioComponent {
   readonly editing = signal(false);
   readonly saving = signal(false);
   readonly generando = signal(false);
+  readonly eliminando = signal(false);
   readonly error = signal('');
   readonly salvandoIntestazione = signal(false);
   readonly intestazioneMsg = signal('');
@@ -455,6 +462,29 @@ export class AdminCalendarioComponent {
         const dettaglio = err?.error?.message;
         const msg = Array.isArray(dettaglio) ? dettaglio.join(', ') : dettaglio;
         this.error.set(msg ? `Salvataggio non riuscito: ${msg}` : 'Salvataggio non riuscito. Controlla i campi e riprova.');
+      },
+    });
+  }
+
+  eliminaTutti(): void {
+    const n = this.voci().length;
+    if (!n) return;
+    const anno = this.anno();
+    const mese = this.mese();
+    const msg = `Eliminare TUTTE le ${n} voci di ${this.meseLabel()}?\n\n`
+      + 'Verranno cancellate anche le voci inserite a mano. L\'operazione non si può annullare '
+      + '(le voci di messe ed eventi si possono ricreare con "Genera dal mese").';
+    if (!confirm(msg)) return;
+    this.eliminando.set(true);
+    this.error.set('');
+    this.service.removeMese(anno, mese).subscribe({
+      next: () => {
+        this.eliminando.set(false);
+        this.ricarica();
+      },
+      error: () => {
+        this.eliminando.set(false);
+        this.error.set('Eliminazione non riuscita.');
       },
     });
   }
