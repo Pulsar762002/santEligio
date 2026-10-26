@@ -21,6 +21,11 @@ export class EventiController {
     return this.eventiService.findProssimi(limit ? +limit : 5);
   }
 
+  @Get('in-evidenza')
+  findInEvidenza() {
+    return this.eventiService.findInEvidenza();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.eventiService.findOne(id);

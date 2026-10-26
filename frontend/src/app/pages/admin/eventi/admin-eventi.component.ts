@@ -10,7 +10,7 @@ import { AreaPortale } from '../../../core/models/utente.model';
 import { Esito } from '../../../core/models/area.model';
 import { assetUrl } from '../../../core/utils/asset-url';
 import { DataTableComponent, ColumnDef } from '../../../shared/data-table/data-table.component';
-import { isoToLocalInput, localInputToIso } from '../../../core/utils/date-input';
+import { dateInputToIso, isoToDateInput, isoToLocalInput, localInputToIso } from '../../../core/utils/date-input';
 import { EditorTestoComponent } from '../../../shared/editor-testo/editor-testo.component';
 
 interface EventoForm {
@@ -21,11 +21,15 @@ interface EventoForm {
   luogo: string;
   immagine: string;
   pubblicato: boolean;
+  inEvidenza: boolean;
+  visibileDal: string; // date: YYYY-MM-DD
+  visibileFino: string;
   aree: string[];
 }
 
 function emptyForm(aree: string[] = []): EventoForm {
-  return { titolo: '', descrizione: '', dataInizio: '', dataFine: '', luogo: '', immagine: '', pubblicato: false, aree };
+  return { titolo: '', descrizione: '', dataInizio: '', dataFine: '', luogo: '', immagine: '', pubblicato: false,
+           inEvidenza: false, visibileDal: '', visibileFino: '', aree };
 }
 
 // Eventi per Admin (tutti), Responsabili e Contributor (quelli delle proprie aree).
@@ -122,10 +126,32 @@ function emptyForm(aree: string[] = []): EventoForm {
             <app-editor-testo name="descrizione" [(ngModel)]="form.descrizione" [html]="auth.isAdmin()" />
           </div>
 
-          <label class="check">
-            <input type="checkbox" name="pubblicato" [(ngModel)]="form.pubblicato" />
-            Pubblicato (visibile sul sito)
-          </label>
+          <fieldset class="box">
+            <legend>Pubblicazione</legend>
+            <label class="check">
+              <input type="checkbox" name="pubblicato" [(ngModel)]="form.pubblicato" />
+              Pubblicato (visibile sul sito)
+            </label>
+            <label class="check">
+              <input type="checkbox" name="inEvidenza" [(ngModel)]="form.inEvidenza" />
+              <span>★ In evidenza <span class="hint inline">— card grande in cima alla pagina Eventi e in home, finché l'evento non termina</span></span>
+            </label>
+
+            <div class="row">
+              <div class="form-group">
+                <label for="visibileDal">Visibile dal</label>
+                <input id="visibileDal" name="visibileDal" type="date" [(ngModel)]="form.visibileDal" />
+              </div>
+              <div class="form-group">
+                <label for="visibileFino">Visibile fino al</label>
+                <input id="visibileFino" name="visibileFino" type="date" [(ngModel)]="form.visibileFino" />
+              </div>
+            </div>
+            <span class="hint">
+              Facoltativi. Senza date l'evento è sempre visibile: tra i prossimi finché non termina, poi tra gli eventi passati.
+              Con "visibile dal" compare sul sito solo da quel giorno; dopo "visibile fino al" sparisce dagli elenchi.
+            </span>
+          </fieldset>
 
           <div class="form-actions">
             <button type="submit" class="btn btn-primary" [disabled]="saving()">
@@ -167,7 +193,10 @@ function emptyForm(aree: string[] = []): EventoForm {
     .form h2 { margin-top: 0; font-size: 1.2rem; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
-    .check { display: flex; align-items: center; gap: .5rem; margin: .5rem 0 1.25rem; font-size: .95rem; }
+    .check { display: flex; align-items: center; gap: .5rem; margin: .5rem 0 .9rem; font-size: .95rem; }
+    .box { border: 1px solid var(--color-border); border-radius: var(--radius); padding: .5rem 1rem 1rem; margin: 0 0 1.25rem; }
+    .box legend { font-weight: 600; font-size: .9rem; padding: 0 .35rem; }
+    .hint.inline { display: inline; margin: 0; }
     .check input { width: auto; }
     .form-actions { display: flex; gap: .75rem; }
     .hint { display: block; font-size: .8rem; color: var(--color-text-muted); margin: .1rem 0 .4rem; }
@@ -239,7 +268,9 @@ export class AdminEventiComponent {
       display: e => (e.aree?.length ? e.aree.map(this.nomeArea).join(', ') : '—') },
     { key: 'luogo', label: 'Luogo', value: e => e.luogo ?? '', display: e => e.luogo || '—' },
     { key: 'pubblicato', label: 'Stato', type: 'badge', value: e => e.pubblicato,
-      badgeLabel: e => (e.pubblicato ? 'Pubblicato' : 'Bozza'), badgeOn: e => e.pubblicato },
+      badgeLabel: e => (e.pubblicato ? 'Pubblicato' : 'Bozza') + (e.inEvidenza ? ' · ★' : ''), badgeOn: e => e.pubblicato },
+    { key: 'visibilita', label: 'Visibilità', sortable: false,
+      value: e => this.visibilita(e), display: e => this.visibilita(e) || '—' },
   ];
 
   constructor() {
@@ -257,6 +288,15 @@ export class AdminEventiComponent {
   filtra(area: string): void {
     this.filtroArea.set(area);
     this.router.navigate([], { queryParams: { area: area || null }, replaceUrl: true });
+  }
+
+  /** "dal 10 nov", "fino al 30 nov", "10 nov – 30 nov" ('' = sempre visibile). */
+  visibilita(e: Evento): string {
+    const f = (iso: string) => this.dp.transform(iso, 'd MMM yy') ?? '';
+    if (e.visibileDal && e.visibileFino) return `${f(e.visibileDal)} – ${f(e.visibileFino)}`;
+    if (e.visibileDal) return `dal ${f(e.visibileDal)}`;
+    if (e.visibileFino) return `fino al ${f(e.visibileFino)}`;
+    return '';
   }
 
   puoEliminare(e: Evento): boolean {
@@ -293,6 +333,9 @@ export class AdminEventiComponent {
       luogo: e.luogo ?? '',
       immagine: e.immagine ?? '',
       pubblicato: e.pubblicato,
+      inEvidenza: !!e.inEvidenza,
+      visibileDal: isoToDateInput(e.visibileDal),
+      visibileFino: isoToDateInput(e.visibileFino),
       aree: aree.filter((a) => this.auth.isAdmin() || mie.includes(a)),
     };
     this.areeAltrui.set(this.auth.isAdmin() ? [] : aree.filter((a) => !mie.includes(a)).map(this.nomeArea));
@@ -331,6 +374,12 @@ export class AdminEventiComponent {
     this.error.set('');
     if (!this.form.titolo.trim()) return this.error.set('Il titolo è obbligatorio.');
     if (!this.form.dataInizio) return this.error.set('La data e ora di inizio sono obbligatorie.');
+    if (this.form.dataFine && this.form.dataFine < this.form.dataInizio) {
+      return this.error.set("La data di fine è precedente all'inizio.");
+    }
+    if (this.form.visibileDal && this.form.visibileFino && this.form.visibileFino < this.form.visibileDal) {
+      return this.error.set('"Visibile fino al" è precedente a "Visibile dal".');
+    }
     if (!this.auth.isAdmin() && !this.form.aree.length && !this.areeAltrui().length) {
       return this.error.set('Scegli almeno una delle tue aree.');
     }
@@ -343,6 +392,10 @@ export class AdminEventiComponent {
       luogo: this.form.luogo.trim() || undefined,
       immagine: this.form.immagine,
       pubblicato: this.form.pubblicato,
+      inEvidenza: this.form.inEvidenza,
+      // null = nessun limite (svuota anche un valore salvato in precedenza)
+      visibileDal: dateInputToIso(this.form.visibileDal),
+      visibileFino: dateInputToIso(this.form.visibileFino, true),
       // per i non-admin si inviano solo le proprie aree: quelle degli altri le conserva il server
       aree: this.form.aree,
     };

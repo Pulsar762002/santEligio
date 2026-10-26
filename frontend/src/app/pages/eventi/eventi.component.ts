@@ -20,13 +20,24 @@ function isFuturo(evento: Evento): boolean {
         <p class="subtitle">Appuntamenti e celebrazioni della comunità</p>
       </header>
 
-      @if (eventiFuturi().length > 0) {
+      @if (inEvidenza().length > 0) {
+        <section class="evidenza" aria-label="Eventi in evidenza">
+          @for (evento of inEvidenza(); track evento._id) {
+            <app-event-card [evento]="evento" [featured]="true" />
+          }
+        </section>
+      }
+
+      @if (altriFuturi().length > 0) {
+        @if (inEvidenza().length > 0) {
+          <div class="past-divider"><span>In programma</span></div>
+        }
         <div class="event-list">
-          @for (evento of eventiFuturi(); track evento._id) {
+          @for (evento of altriFuturi(); track evento._id) {
             <app-event-card [evento]="evento" />
           }
         </div>
-      } @else if (eventiPassati().length === 0) {
+      } @else if (eventiFuturi().length === 0 && eventiPassati().length === 0) {
         <div class="empty-state">
           <p class="empty">Al momento non ci sono eventi in programma.</p>
         </div>
@@ -47,6 +58,7 @@ function isFuturo(evento: Evento): boolean {
     .page-head h1 { margin-bottom: .25rem; }
     .subtitle { color: var(--color-text-muted); font-size: 1.05rem; margin: 0; }
     .event-list { display: grid; gap: 1rem; }
+    .evidenza { display: grid; gap: 1.25rem; margin-bottom: 1rem; }
     .event-list.past { opacity: .8; }
     .empty-state { text-align: center; padding: 3rem 1rem; background: var(--color-bg-alt); border-radius: var(--radius); }
 
@@ -74,5 +86,8 @@ export class EventiComponent {
   private readonly eventi = toSignal(this.eventiService.getAll(), { initialValue: [] as Evento[] });
 
   readonly eventiFuturi = computed(() => this.eventi().filter(isFuturo));
-  readonly eventiPassati = computed(() => this.eventi().filter((e) => !isFuturo(e)));
+  readonly inEvidenza = computed(() => this.eventiFuturi().filter((e) => e.inEvidenza));
+  readonly altriFuturi = computed(() => this.eventiFuturi().filter((e) => !e.inEvidenza));
+  // dal più recente: l'API ordina per data di inizio crescente
+  readonly eventiPassati = computed(() => this.eventi().filter((e) => !isFuturo(e)).reverse());
 }

@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
-import { NotFoundException } from '@nestjs/common';
-import { EventiService } from './eventi.service';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { EventiService, filtroVisibile, verificaDateEvento, verificaDateModifica } from './eventi.service';
 import { Evento } from './schemas/evento.schema';
 
 describe('EventiService', () => {
@@ -26,11 +26,13 @@ describe('EventiService', () => {
   });
 
   describe('findAll', () => {
-    it('filters by pubblicato=true and sorts by dataInizio asc by default', () => {
+    it('filters published events inside their visibility window and sorts by dataInizio asc by default', () => {
       const sort = jest.fn();
       model.find.mockReturnValue({ sort });
       service.findAll();
-      expect(model.find).toHaveBeenCalledWith({ pubblicato: true });
+      const filter = model.find.mock.calls[0][0];
+      expect(filter.pubblicato).toBe(true);
+      expect(filter.$and).toHaveLength(2);
       expect(sort).toHaveBeenCalledWith({ dataInizio: 1 });
     });
 
@@ -103,8 +105,72 @@ describe('EventiService', () => {
 
   describe('update', () => {
     it('throws NotFoundException when the id does not exist', async () => {
-      model.findByIdAndUpdate.mockResolvedValue(null);
+      model.findById.mockResolvedValue(null);
       await expect(service.update('x', {})).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('checks the new dates against the saved ones', async () => {
+      const doc = { dataInizio: new Date('2026-10-24T08:00:00Z'), set: jest.fn(), save: jest.fn() };
+      model.findById.mockResolvedValue(doc);
+      await expect(service.update('1', { dataFine: '2026-10-23T08:00:00Z' })).rejects.toBeInstanceOf(BadRequestException);
+      expect(doc.save).not.toHaveBeenCalled();
+    });
+
+    it('applies the dto and saves', async () => {
+      const doc = { dataInizio: new Date('2026-10-24T08:00:00Z'), set: jest.fn(), save: jest.fn().mockResolvedValue('ok') };
+      model.findById.mockResolvedValue(doc);
+      expect(await service.update('1', { inEvidenza: true })).toBe('ok');
+      expect(doc.set).toHaveBeenCalledWith({ inEvidenza: true });
+    });
+  });
+
+  describe('create', () => {
+    it('rejects an end date before the start', () => {
+      expect(() =>
+        service.create({ titolo: 'x', dataInizio: '2026-10-24T14:00:00Z', dataFine: '2026-10-24T03:00:00Z' }),
+      ).toThrow(BadRequestException);
+      expect(model.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('findInEvidenza', () => {
+    it('returns visible, not yet ended, featured events sorted by dataInizio', () => {
+      const sort = jest.fn();
+      model.find.mockReturnValue({ sort });
+      service.findInEvidenza();
+      const filter = model.find.mock.calls[0][0];
+      expect(filter.inEvidenza).toBe(true);
+      expect(filter.pubblicato).toBe(true);
+      expect(filter.$and).toHaveLength(2);
+      expect(filter.$or[0].dataFine.$gte).toBeInstanceOf(Date);
+      expect(sort).toHaveBeenCalledWith({ dataInizio: 1 });
+    });
+  });
+
+  describe('filtroVisibile', () => {
+    it('treats missing/null visibility bounds as open', () => {
+      const now = new Date('2026-10-26T10:00:00Z');
+      expect(filtroVisibile(now).$and).toEqual([
+        { $or: [{ visibileDal: null }, { visibileDal: { $lte: now } }] },
+        { $or: [{ visibileFino: null }, { visibileFino: { $gte: now } }] },
+      ]);
+    });
+  });
+
+  describe('verificaDate', () => {
+    it('accepts coherent or partial dates', () => {
+      expect(() => verificaDateEvento({ dataInizio: '2026-10-24', dataFine: '2026-12-08' })).not.toThrow();
+      expect(() => verificaDateEvento({ visibileFino: '2026-01-01' })).not.toThrow();
+    });
+
+    it('rejects a visibility window that ends before it starts', () => {
+      expect(() => verificaDateEvento({ visibileDal: '2026-11-01', visibileFino: '2026-10-01' })).toThrow(BadRequestException);
+    });
+
+    it('on update, null clears a saved bound', () => {
+      const salvato = { dataInizio: new Date('2026-10-24'), visibileDal: new Date('2026-11-01') };
+      expect(() => verificaDateModifica(salvato, { visibileFino: '2026-10-01' })).toThrow(BadRequestException);
+      expect(() => verificaDateModifica(salvato, { visibileDal: null, visibileFino: '2026-10-01' })).not.toThrow();
     });
   });
 
