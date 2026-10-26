@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# Compila l'app Android firmata per Google Play (AAB) dentro un container Docker.
+# Compila l'app Android firmata dentro un container Docker: AAB per Google Play
+# e APK da installare direttamente sul telefono.
 #
 #   frontend/android/build-release.sh /percorso/cartella-chiavi
 #
 # La cartella chiavi contiene upload-keystore.jks e keystore.properties
 # (storeFile=/chiavi/upload-keystore.jks, storePassword, keyAlias, keyPassword).
 # Risultato: frontend/android/app/build/outputs/bundle/release/app-release.aab
+#            frontend/android/app/build/outputs/apk/release/app-release.apk
 set -euo pipefail
 
 CHIAVI="${1:?Indica la cartella con keystore e keystore.properties}"
@@ -26,7 +28,7 @@ docker run --rm \
 echo "▶ Immagine Docker di build"
 docker build -q -t santeligio-android-build -f "$ANDROID_DIR/build.Dockerfile" "$ANDROID_DIR"
 
-echo "▶ Gradle bundleRelease"
+echo "▶ Gradle bundleRelease + assembleRelease"
 docker run --rm \
   --user "$(id -u):$(id -g)" \
   -e HOME=/tmp/home -e GRADLE_USER_HOME=/gradle \
@@ -35,6 +37,6 @@ docker run --rm \
   -v "$CACHE/gradle:/gradle" \
   -v "$(cd "$CHIAVI" && pwd):/chiavi:ro" \
   santeligio-android-build \
-  ./gradlew --no-daemon bundleRelease
+  ./gradlew --no-daemon bundleRelease assembleRelease
 
-ls -la "$ANDROID_DIR/app/build/outputs/bundle/release/"
+ls -la "$ANDROID_DIR/app/build/outputs/bundle/release/" "$ANDROID_DIR/app/build/outputs/apk/release/"
