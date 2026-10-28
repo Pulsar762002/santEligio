@@ -10,6 +10,7 @@ export const FESTIVI_FISSI: string[] = [
   '01-06', // Epifania del Signore – Solennità
   '08-15', // Assunzione della Beata Vergine Maria – Solennità
   '11-01', // Tutti i Santi – Solennità
+  '11-02', // Commemorazione dei fedeli defunti – non è solennità, ma ha Messe proprie da riportare nel PDF
   '12-08', // Immacolata Concezione della Beata Vergine Maria – Solennità
   '12-25', // Natale del Signore – Solennità
   '12-26', // Santo Stefano – Festa, giorno festivo civile

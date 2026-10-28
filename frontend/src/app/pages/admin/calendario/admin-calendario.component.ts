@@ -440,8 +440,9 @@ export class AdminCalendarioComponent {
       ora: this.form.ora.trim(),
       titolo: this.form.titolo.trim(),
       tipo: this.form.tipo,
-      luogo: this.form.luogo.trim() || undefined,
-      note: this.form.note.trim() || undefined,
+      // Stringa vuota, non undefined: in modifica un campo omesso non verrebbe svuotato sul server.
+      luogo: this.form.luogo.trim(),
+      note: this.form.note.trim(),
       pubblicato: this.form.pubblicato,
       colore: this.form.colore,
       grassetto: this.form.grassetto,
